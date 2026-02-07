@@ -86,6 +86,11 @@ npm run preview
 npm run lint
 ```
 
+## Releases
+
+See [Version Management Guide](docs/versioning.md) for release instructions.
+
+
 ## 📄 License
 
 MIT
