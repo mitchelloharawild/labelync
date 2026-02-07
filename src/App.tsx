@@ -7,6 +7,7 @@ import TemplateModal from './components/TemplateModal';
 import { usePrinter } from './hooks/usePrinter';
 import { getDefaultConfig, loadPrinterConfig, savePrinterConfig } from './utils/printerStorage';
 import { getTemplate, getDefaultTemplate } from './utils/templateStorage';
+import { updateSVGTextFields } from './utils/svgTextUtils';
 import type { Template, PrinterConfig } from './types';
 import './App.css';
 
@@ -77,6 +78,51 @@ function App() {
     if (canvas) {
       await printImage(canvas, printerConfig);
     }
+  };
+
+  const handleExportSVG = () => {
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(currentTemplate.svgContent, 'image/svg+xml');
+    const svgElement = svgDoc.querySelector('svg');
+    
+    if (!svgElement) return;
+
+    // Get SVG dimensions
+    const widthAttr = svgElement.getAttribute('width') || '384';
+    let svgWidth: number;
+    
+    if (widthAttr.match(/[a-z]/i)) {
+      const viewBox = svgElement.getAttribute('viewBox');
+      if (viewBox) {
+        const viewBoxValues = viewBox.split(/\s+/);
+        svgWidth = parseFloat(viewBoxValues[2]) || 384;
+      } else {
+        svgWidth = 384;
+      }
+    } else {
+      svgWidth = parseFloat(widthAttr);
+    }
+    
+    const padding = 20;
+    const maxTextWidth = svgWidth - (padding * 2);
+
+    // Update text fields in the SVG
+    updateSVGTextFields(svgDoc, textFieldValues, maxTextWidth);
+
+    // Serialize the updated SVG
+    const serializer = new XMLSerializer();
+    const updatedSvgString = serializer.serializeToString(svgDoc);
+
+    // Create a blob and download link
+    const blob = new Blob([updatedSvgString], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${currentTemplate.name.replace(/\s+/g, '_')}_${Date.now()}.svg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleSaveConfig = (config: PrinterConfig) => {
@@ -238,6 +284,13 @@ function App() {
             >
               🖨 Print Sticker
             </button>
+
+            {/* <button 
+              className="print-button export-button" 
+              onClick={handleExportSVG}
+            >
+              💾 Export SVG
+            </button> */}
 
             <PrinterCanvas 
               template={currentTemplate}

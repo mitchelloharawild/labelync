@@ -58,6 +58,10 @@ export const updateSVGTextFields = (
     const originalFontSize = parseFloat(textElement.getAttribute('font-size') || '32');
     let adjustedFontSize = originalFontSize;
 
+    // Check if text should be vertically centered
+    const dominantBaseline = textElement.getAttribute('dominant-baseline');
+    const isMiddleAligned = dominantBaseline === 'middle';
+
     // Check if it's a multi-line text (has tspan children)
     const tspans = textElement.querySelectorAll('tspan');
     if (tspans.length > 0) {
@@ -87,20 +91,43 @@ export const updateSVGTextFields = (
       // Update font size
       textElement.setAttribute('font-size', adjustedFontSize.toString());
 
-      // Get the first tspan's y position and x position to use as baseline
+      // Determine if original tspans use dy or y positioning
       const firstTspan = tspans[0];
-      const baseY = parseFloat(firstTspan.getAttribute('y') || '100');
-      const baseX = firstTspan.getAttribute('x') || '192';
+      const usesDy = firstTspan.hasAttribute('dy');
       
-      // Store the style attribute from the first tspan to preserve formatting
+      // Store positioning attributes
+      const baseX = firstTspan.getAttribute('x') || '192';
       const tspanStyle = firstTspan.getAttribute('style') || '';
       
-      // Calculate original line spacing from the first two tspans
-      let lineHeight = originalFontSize * 1.25; // fallback based on original font size
-      if (tspans.length > 1) {
-        const firstY = parseFloat(tspans[0].getAttribute('y') || '0');
-        const secondY = parseFloat(tspans[1].getAttribute('y') || '0');
-        lineHeight = secondY - firstY; // Use original spacing as-is
+      let lineSpacing: number;
+      
+      if (usesDy) {
+        // Calculate line spacing from dy values
+        if (tspans.length > 1) {
+          const firstDy = parseFloat(tspans[1].getAttribute('dy') || '0');
+          lineSpacing = firstDy || (adjustedFontSize * 1.25);
+        } else {
+          lineSpacing = adjustedFontSize * 1.25;
+        }
+      } else {
+        // Calculate line spacing from y positions
+        const baseY = parseFloat(firstTspan.getAttribute('y') || '100');
+        lineSpacing = adjustedFontSize * 1.25; // fallback
+        
+        if (tspans.length > 1) {
+          const firstY = parseFloat(tspans[0].getAttribute('y') || '0');
+          const secondY = parseFloat(tspans[1].getAttribute('y') || '0');
+          lineSpacing = secondY - firstY;
+        }
+      }
+
+      // Calculate vertical offset for middle alignment
+      let verticalOffset = 0;
+      if (isMiddleAligned && lines.length > 1) {
+        // Total height of text block (n-1 spacings between n lines)
+        const totalHeight = (lines.length - 1) * lineSpacing;
+        // Offset to center the block (move up by half the total height)
+        verticalOffset = -totalHeight / 2;
       }
 
       // Remove all existing tspans
@@ -111,12 +138,25 @@ export const updateSVGTextFields = (
         const tspan = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'tspan');
         tspan.textContent = line;
         
-        // Set absolute y position for each line
-        const yPosition = baseY + (index * lineHeight);
-        tspan.setAttribute('y', yPosition.toString());
-        
-        // Use consistent x position for all lines
+        // Set x position
         tspan.setAttribute('x', baseX);
+        
+        // Apply positioning based on original method
+        if (usesDy) {
+          // Use dy for relative positioning
+          if (index === 0) {
+            // First line: apply vertical offset for middle alignment
+            tspan.setAttribute('dy', verticalOffset.toString());
+          } else {
+            // Subsequent lines: use relative spacing
+            tspan.setAttribute('dy', lineSpacing.toString());
+          }
+        } else {
+          // Use absolute y positioning
+          const baseY = parseFloat(firstTspan.getAttribute('y') || '100');
+          const yPosition = baseY + verticalOffset + (index * lineSpacing);
+          tspan.setAttribute('y', yPosition.toString());
+        }
         
         // Preserve the original style attributes for proper alignment
         if (tspanStyle) {

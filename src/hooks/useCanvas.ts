@@ -54,7 +54,22 @@ const drawSVGTemplate = (
   if (!svgElement) return;
 
   // Get SVG dimensions
-  const svgWidth = parseFloat(svgElement.getAttribute('width') || '384');
+  const widthAttr = svgElement.getAttribute('width') || '384';
+  let svgWidth: number;
+  
+  // If width contains non-numeric characters (like 'cm', 'mm', etc.), use viewBox instead
+  if (widthAttr.match(/[a-z]/i)) {
+    const viewBox = svgElement.getAttribute('viewBox');
+    if (viewBox) {
+      const viewBoxValues = viewBox.split(/\s+/);
+      svgWidth = parseFloat(viewBoxValues[2]) || 384;
+    } else {
+      svgWidth = 384;
+    }
+  } else {
+    svgWidth = parseFloat(widthAttr);
+  }
+  
   const padding = 20; // 20px padding on each side
   const maxTextWidth = svgWidth - (padding * 2);
 

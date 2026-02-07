@@ -3,8 +3,6 @@ import type { Template } from '../types';
 const TEMPLATES_KEY = 'phomemo_templates';
 const DEFAULT_TEMPLATE_ID = 'default_no_template';
 
-// ...existing code...
-
 export const saveTemplate = (template: Template): void => {
   const templates = loadTemplates();
   const existingIndex = templates.findIndex(t => t.id === template.id);
@@ -23,10 +21,20 @@ export const loadTemplates = (): Template[] => {
     const stored = localStorage.getItem(TEMPLATES_KEY);
     const templates = stored ? JSON.parse(stored) as Template[] : [];
     
-    // Always ensure default template exists
-    const hasDefault = templates.some(t => t.id === DEFAULT_TEMPLATE_ID);
-    if (!hasDefault) {
-      templates.unshift(createDefaultTemplate());
+    // Always ensure default template exists and is up-to-date
+    const defaultIndex = templates.findIndex(t => t.id === DEFAULT_TEMPLATE_ID);
+    const currentDefault = createDefaultTemplate();
+    
+    if (defaultIndex >= 0) {
+      // Update existing default template while preserving usage data
+      const existingDefault = templates[defaultIndex];
+      templates[defaultIndex] = {
+        ...currentDefault,
+        lastUsedAt: existingDefault.lastUsedAt // Preserve last used timestamp
+      };
+    } else {
+      // Add default template if it doesn't exist
+      templates.unshift(currentDefault);
     }
     
     return templates;
@@ -35,8 +43,6 @@ export const loadTemplates = (): Template[] => {
     return [createDefaultTemplate()];
   }
 };
-
-// ...existing code...
 
 export const deleteTemplate = (templateId: string): void => {
   // Prevent deletion of default template
@@ -48,8 +54,6 @@ export const deleteTemplate = (templateId: string): void => {
   const filtered = templates.filter(t => t.id !== templateId);
   localStorage.setItem(TEMPLATES_KEY, JSON.stringify(filtered));
 };
-
-// ...existing code...
 
 export const getTemplate = (templateId: string): Template | null => {
   const templates = loadTemplates();
@@ -78,8 +82,10 @@ export const generateTemplateId = (): string => {
 };
 
 export const createDefaultTemplate = (): Template => {
-  const svgContent = `<svg width="3cm" height="2cm" version="1.1" viewBox="0 0 113.39 75.591" xmlns="http://www.w3.org/2000/svg">
- <text id="Text" x="50%" y="50%" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="32px" text-anchor="middle" style="line-height:1"><tspan x="56.695" y="37.7955"/></text>
+  const svgContent = `<svg width="150" height="100" version="1.1" viewBox="0 0 150 100" xmlns="http://www.w3.org/2000/svg">
+ <text id="Text" x="50%" y="50%" font-family="Arial" font-size="16" text-anchor="middle" dominant-baseline="middle">
+  <tspan x="50%" dy="0">Text</tspan>
+ </text>
 </svg>`;
 
   return {
@@ -87,8 +93,8 @@ export const createDefaultTemplate = (): Template => {
     name: 'No template',
     svgContent,
     textFieldIds: ['Text'],
-    textFieldValues: { Text: 'Line 1\\nLine 2\\nLine 3' },
-    createdAt: 0, // epoch 0 to indicate it's a default template
+    textFieldValues: { Text: 'Line 1\nLine 2\nLine 3' },
+    createdAt: 0,
     lastUsedAt: 0
   };
 };
