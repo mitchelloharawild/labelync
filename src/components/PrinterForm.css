@@ -1,0 +1,64 @@
+.printer-form {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.printer-form label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.printer-form input,
+.printer-form select,
+.printer-form textarea {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 12px;
+  border: 1px solid #666;
+  border-radius: 4px;
+  background-color: #555;
+  color: white;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.printer-form textarea {
+  resize: vertical;
+}
+
+.input-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.input-group > div {
+  flex: 1;
+}
+
+.input-group label {
+  margin-bottom: 4px;
+}
+
+.date-picker-container {
+  margin-bottom: 12px;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+  margin-bottom: 0;
+}
+
+.checkbox-wrapper label {
+  margin-bottom: 0;
+}
