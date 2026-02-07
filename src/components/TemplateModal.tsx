@@ -9,6 +9,7 @@ import {
   updateTemplateUsage 
 } from '../utils/templateStorage';
 import { extractTextFieldIds } from '../utils/svgTextUtils';
+import Modal from './Modal';
 import './TemplateModal.css';
 
 interface TemplateModalProps {
@@ -33,6 +34,8 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
       loadTemplatesFromStorage();
     }
   }, [isOpen]);
+
+
 
   const loadTemplatesFromStorage = () => {
     const loadedTemplates = loadTemplates();
@@ -184,17 +187,30 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
     return parts.join(', ') || `${template.fieldMetadata.length} field${template.fieldMetadata.length !== 1 ? 's' : ''}`;
   };
 
-  if (!isOpen) return null;
+  const footer = (
+    <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".svg,image/svg+xml"
+        onChange={handleUploadTemplate}
+        style={{ display: 'none' }}
+      />
+      <button className="button button-primary upload-template-btn" onClick={handleUploadClick}>
+        📁 Upload New Template
+      </button>
+    </>
+  );
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content template-modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Template Manager</h2>
-          <button className="close-button" onClick={onClose}>×</button>
-        </div>
-
-        <div className="modal-body template-modal-body">
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      title="Template Manager" 
+      footer={footer}
+      className="template-modal-content"
+    >
+      <div className="template-modal-body">
           <div className="templates-grid">
             {templates.map((template) => (
               <div
@@ -248,22 +264,8 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
               </div>
             ))}
           </div>
-        </div>
-
-        <div className="modal-footer">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".svg,image/svg+xml"
-            onChange={handleUploadTemplate}
-            style={{ display: 'none' }}
-          />
-          <button className="button button-primary upload-template-btn" onClick={handleUploadClick}>
-            📁 Upload New Template
-          </button>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

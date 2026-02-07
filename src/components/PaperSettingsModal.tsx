@@ -1,5 +1,6 @@
 import React from 'react';
 import type { PrinterConfig } from '../types';
+import Modal from './Modal';
 import './PaperSettingsModal.css';
 
 interface PaperSettingsModalProps {
@@ -31,8 +32,6 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
     });
   }, [config]);
 
-  if (!isOpen) return null;
-
   const handleChange = (field: 'paperType' | 'paperWidth' | 'paperHeight', value: number) => {
     setLocalConfig(prev => ({
       ...prev,
@@ -58,16 +57,20 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
     { value: 0x26, label: 'Label With Marks' }
   ];
 
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Paper Settings</h2>
-          <button className="close-button" onClick={onClose}>×</button>
-        </div>
+  const footer = (
+    <>
+      <button className="button button-secondary" onClick={onClose}>
+        Cancel
+      </button>
+      <button className="button button-primary" onClick={handleSave}>
+        Save Settings
+      </button>
+    </>
+  );
 
-        <div className="modal-body">
-          <div className="form-group">
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Paper Settings" footer={footer}>
+      <div className="form-group">
             <label htmlFor="paperType">Paper Type:</label>
             <select
               id="paperType"
@@ -130,19 +133,8 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
                 max="200"
               />
             </div>
-          </div>
-        </div>
-
-        <div className="modal-footer">
-          <button className="button button-secondary" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="button button-primary" onClick={handleSave}>
-            Save Settings
-          </button>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import type { PrinterConfig } from '../types';
+import Modal from './Modal';
 import './PrinterSetupModal.css';
 
 interface PrinterSetupModalProps {
@@ -21,8 +22,6 @@ const PrinterSetupModal: React.FC<PrinterSetupModalProps> = ({
     setLocalConfig(config);
   }, [config]);
 
-  if (!isOpen) return null;
-
   const handleChange = (field: keyof PrinterConfig, value: string | number) => {
     setLocalConfig(prev => ({
       ...prev,
@@ -35,16 +34,20 @@ const PrinterSetupModal: React.FC<PrinterSetupModalProps> = ({
     onClose();
   };
 
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Printer Setup</h2>
-          <button className="close-button" onClick={onClose}>×</button>
-        </div>
+  const footer = (
+    <>
+      <button className="button button-secondary" onClick={onClose}>
+        Cancel
+      </button>
+      <button className="button button-primary" onClick={handleSave}>
+        Save Settings
+      </button>
+    </>
+  );
 
-        <div className="modal-body">
-          <div className="form-group">
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Printer Setup" footer={footer}>
+      <div className="form-group">
             <label htmlFor="deviceModel">Device Model:</label>
             <select
               id="deviceModel"
@@ -92,18 +95,7 @@ const PrinterSetupModal: React.FC<PrinterSetupModalProps> = ({
               <span>Fast (5)</span>
             </div>
           </div>
-        </div>
-
-        <div className="modal-footer">
-          <button className="button button-secondary" onClick={onClose}>
-            Cancel
-          </button>
-          <button className="button button-primary" onClick={handleSave}>
-            Save Settings
-          </button>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 };
 
