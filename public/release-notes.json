@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "date": "2026-02-07",
+  "changes": [
+    "Initial release with PWA support",
+    "Single and multiple line text support",
+    "Device specific configuration of print and paper settings",
+    "Added support for special fields (date, qrcode, image)"
+  ]
+}

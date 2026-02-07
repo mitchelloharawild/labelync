@@ -4,6 +4,7 @@ import PrinterCanvas from './components/PrinterCanvas';
 import PrinterSetupModal from './components/PrinterSetupModal';
 import PaperSettingsModal from './components/PaperSettingsModal';
 import TemplateModal from './components/TemplateModal';
+import { PWAUpdateNotification } from './components/PWAUpdateNotification';
 import { usePrinter } from './hooks/usePrinter';
 import { getDefaultConfig, loadPrinterConfig, savePrinterConfig } from './utils/printerStorage';
 import { getTemplate, getDefaultTemplate } from './utils/templateStorage';
@@ -195,6 +196,8 @@ function App() {
 
   return (
     <div className="app-container">
+      <PWAUpdateNotification />
+      
       {notification && (
         <div className={`notification notification-${notification.type}`}>
           {notification.message}
