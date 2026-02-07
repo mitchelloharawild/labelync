@@ -34,21 +34,21 @@ export const useCanvas = (
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw SVG template
-    drawSVGTemplate(ctx, canvas, template.svgContent, textFieldValues);
+    // Draw SVG template (async)
+    drawSVGTemplate(ctx, canvas, template, textFieldValues);
   }, [template, textFieldValues, printerConfig]);
 
   return canvasRef;
 };
 
-const drawSVGTemplate = (
+const drawSVGTemplate = async (
   ctx: CanvasRenderingContext2D, 
   canvas: HTMLCanvasElement, 
-  svgTemplate: string, 
+  template: Template,
   textFields: Record<string, string>
-): void => {
+): Promise<void> => {
   const parser = new DOMParser();
-  const svgDoc = parser.parseFromString(svgTemplate, 'image/svg+xml');
+  const svgDoc = parser.parseFromString(template.svgContent, 'image/svg+xml');
   const svgElement = svgDoc.querySelector('svg');
   
   if (!svgElement) return;
@@ -61,7 +61,7 @@ const drawSVGTemplate = (
   if (widthAttr.match(/[a-z]/i)) {
     const viewBox = svgElement.getAttribute('viewBox');
     if (viewBox) {
-      const viewBoxValues = viewBox.split(/\s+/);
+      const viewBoxValues = viewBox.split(/\\s+/);
       svgWidth = parseFloat(viewBoxValues[2]) || 384;
     } else {
       svgWidth = 384;
@@ -73,8 +73,8 @@ const drawSVGTemplate = (
   const padding = 20; // 20px padding on each side
   const maxTextWidth = svgWidth - (padding * 2);
 
-  // Update text elements using shared utility
-  updateSVGTextFields(svgDoc, textFields, maxTextWidth);
+  // Update text elements using async utility (supports QR codes, dates, etc.)
+  await updateSVGTextFields(svgDoc, textFields, maxTextWidth, template.fieldMetadata);
 
   // Serialize the updated SVG
   const serializer = new XMLSerializer();

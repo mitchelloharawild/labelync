@@ -1,0 +1,77 @@
+<!--
+  Example SVG Template: Event Badge with Date Field
+  
+  Field Type Schema:
+  - data-field-type: Specifies the field type ('text', 'date', 'qr', 'image')
+  - data-label: Display label for the form field
+  - data-date-format: Format string for date fields (e.g., 'YYYY-MM-DD', 'DD/MM/YYYY', 'MMMM D, YYYY')
+  
+  Supported date format tokens:
+  - YYYY: 4-digit year
+  - YY: 2-digit year
+  - MMMM: Full month name
+  - MMM: Short month name
+  - MM: 2-digit month
+  - M: Month number
+  - DD: 2-digit day
+  - D: Day number
+  - dddd: Full day name
+  - ddd: Short day name
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="240" viewBox="0 0 384 240">
+  <!-- Background -->
+  <rect width="384" height="240" fill="white"/>
+  
+  <!-- Border -->
+  <rect x="10" y="10" width="364" height="220" fill="none" stroke="black" stroke-width="2"/>
+  
+  <!-- Title -->
+  <text x="192" y="50" font-size="28" font-weight="bold" text-anchor="middle" font-family="Arial, sans-serif">
+    EVENT BADGE
+  </text>
+  
+  <!-- Name field (text) -->
+  <text 
+    id="attendee_name" 
+    x="192" 
+    y="100" 
+    font-size="24" 
+    text-anchor="middle" 
+    font-family="Arial, sans-serif"
+    data-field-type="text"
+    data-label="Attendee Name">
+    John Doe
+  </text>
+  
+  <!-- Event date (date field with custom format) -->
+  <text 
+    id="event_date" 
+    x="192" 
+    y="140" 
+    font-size="18" 
+    text-anchor="middle" 
+    font-family="Arial, sans-serif"
+    data-field-type="date"
+    data-label="Event Date"
+    data-date-format="MMMM D, YYYY">
+    January 1, 2024
+  </text>
+  
+  <!-- Company field (text) -->
+  <text 
+    id="company" 
+    x="192" 
+    y="180" 
+    font-size="16" 
+    text-anchor="middle" 
+    font-family="Arial, sans-serif"
+    data-field-type="text"
+    data-label="Company">
+    Acme Corporation
+  </text>
+  
+  <!-- Footer -->
+  <text x="192" y="215" font-size="12" text-anchor="middle" font-family="Arial, sans-serif" fill="#666">
+    Please wear this badge at all times
+  </text>
+</svg>

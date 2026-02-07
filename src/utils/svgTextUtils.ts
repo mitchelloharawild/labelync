@@ -1,9 +1,62 @@
-// Shared utilities for handling SVG text elements
+// SVG utilities for handling text elements and special field types
+
+import { FieldType, FieldMetadata } from '../types';
+import { 
+  updateQRCodeElement, 
+  updateDateElement, 
+  updateImageElement 
+} from './fieldRenderers';
 
 export interface TextFieldInfo {
   ids: string[];
   defaults: Record<string, string>;
+  metadata: FieldMetadata[];
 }
+
+/**
+ * Extract field metadata from SVG elements
+ */
+export const extractFieldMetadata = (element: Element): FieldMetadata => {
+  const id = element.getAttribute('id') || '';
+  const typeAttr = element.getAttribute('data-field-type');
+  
+  let type: FieldType;
+  if (typeAttr === 'date') {
+    type = FieldType.DATE;
+  } else if (typeAttr === 'qr') {
+    type = FieldType.QR;
+  } else if (typeAttr === 'image') {
+    type = FieldType.IMAGE;
+  } else {
+    type = FieldType.TEXT;
+  }
+  
+  const metadata: FieldMetadata = {
+    id,
+    type,
+    label: element.getAttribute('data-label') || undefined,
+  };
+  
+  if (type === FieldType.QR) {
+    const qrVersion = element.getAttribute('data-qr-version');
+    const qrErrorCorrection = element.getAttribute('data-qr-error-correction');
+    metadata.qrVersion = qrVersion || 'auto';
+    metadata.qrErrorCorrection = (qrErrorCorrection as 'L' | 'M' | 'Q' | 'H') || 'M';
+  }
+  
+  if (type === FieldType.DATE) {
+    metadata.dateFormat = element.getAttribute('data-date-format') || 'YYYY-MM-DD';
+  }
+  
+  if (type === FieldType.IMAGE) {
+    const width = element.getAttribute('data-image-width');
+    const height = element.getAttribute('data-image-height');
+    if (width) metadata.imageWidth = parseInt(width, 10);
+    if (height) metadata.imageHeight = parseInt(height, 10);
+  }
+  
+  return metadata;
+};
 
 /**
  * Extract text field IDs and their default values from SVG content
@@ -11,174 +64,191 @@ export interface TextFieldInfo {
 export const extractTextFieldIds = (svgContent: string): TextFieldInfo => {
   const parser = new DOMParser();
   const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
-  const textElements = svgDoc.querySelectorAll('text[id]');
+  const textElements = svgDoc.querySelectorAll('text[id], rect[id], image[id]');
   
   const ids: string[] = [];
   const defaults: Record<string, string> = {};
+  const metadata: FieldMetadata[] = [];
   
   textElements.forEach(el => {
     const id = el.getAttribute('id');
     if (id) {
       ids.push(id);
+      const fieldMetadata = extractFieldMetadata(el);
+      metadata.push(fieldMetadata);
       
-      // Check if text element has tspan children (multi-line)
-      const tspans = el.querySelectorAll('tspan');
-      if (tspans.length > 0) {
-        const lines: string[] = [];
-        tspans.forEach(tspan => {
-          lines.push(tspan.textContent || '');
-        });
-        defaults[id] = lines.join('\n'); // Use actual newline
+      if (fieldMetadata.type === FieldType.DATE) {
+        defaults[id] = new Date().toISOString().split('T')[0];
+      } else if (fieldMetadata.type === FieldType.QR) {
+        defaults[id] = '';
+      } else if (fieldMetadata.type === FieldType.IMAGE) {
+        defaults[id] = '';
       } else {
-        defaults[id] = el.textContent || '';
+        const tspans = el.querySelectorAll('tspan');
+        if (tspans.length > 0) {
+          const lines: string[] = [];
+          tspans.forEach(tspan => {
+            lines.push(tspan.textContent || '');
+          });
+          defaults[id] = lines.join('\n');
+        } else {
+          defaults[id] = el.textContent || '';
+        }
       }
     }
   });
   
-  return { ids, defaults };
+  return { ids, defaults, metadata };
 };
 
 /**
- * Update text elements in SVG with new values
+ * Update text elements in SVG with new values (async version)
  */
-export const updateSVGTextFields = (
+export const updateSVGTextFields = async (
   svgDoc: Document,
   textFields: Record<string, string>,
-  maxTextWidth: number
-): void => {
-  // Get SVG dimensions for padding calculation
+  maxTextWidth: number,
+  fieldMetadata?: FieldMetadata[]
+): Promise<void> => {
   const svgElement = svgDoc.querySelector('svg');
   if (!svgElement) return;
 
-  Object.entries(textFields).forEach(([id, value]) => {
-    const textElement = svgDoc.getElementById(id) as SVGTextElement;
-    if (!textElement) return;
+  const metadataMap = new Map<string, FieldMetadata>();
+  if (fieldMetadata) {
+    fieldMetadata.forEach(meta => metadataMap.set(meta.id, meta));
+  }
 
-    // Get original font size
-    const originalFontSize = parseFloat(textElement.getAttribute('font-size') || '32');
-    let adjustedFontSize = originalFontSize;
+  const updates = Object.entries(textFields).map(async ([id, value]) => {
+    const element = svgDoc.getElementById(id);
+    if (!element) return;
 
-    // Check if text should be vertically centered
-    const dominantBaseline = textElement.getAttribute('dominant-baseline');
-    const isMiddleAligned = dominantBaseline === 'middle';
-
-    // Check if it's a multi-line text (has tspan children)
-    const tspans = textElement.querySelectorAll('tspan');
-    if (tspans.length > 0) {
-      // Multi-line: split value by newlines and update tspans
-      const lines = value.split('\n'); // Use actual newline
-      
-      // Find the longest line
-      let maxLineLength = 0;
-      let longestLine = '';
-      lines.forEach(line => {
-        if (line.length > maxLineLength) {
-          maxLineLength = line.length;
-          longestLine = line;
-        }
-      });
-
-      // Calculate required font size based on longest line
-      if (longestLine) {
-        adjustedFontSize = calculateFontSize(
-          longestLine,
-          maxTextWidth,
-          originalFontSize,
-          textElement
-        );
+    const metadata = metadataMap.get(id);
+    
+    if (metadata) {
+      if (metadata.type === FieldType.QR) {
+        await updateQRCodeElement(svgDoc, id, value, metadata);
+        return;
+      } else if (metadata.type === FieldType.DATE) {
+        const formattedDate = updateDateElement(svgDoc, id, value, metadata);
+        value = formattedDate;
+      } else if (metadata.type === FieldType.IMAGE) {
+        updateImageElement(svgDoc, id, value, metadata);
+        return;
       }
+    }
 
-      // Update font size
-      textElement.setAttribute('font-size', adjustedFontSize.toString());
+    const textElement = element as SVGTextElement;
+    if (textElement.tagName !== 'text') return;
 
-      // Determine if original tspans use dy or y positioning
-      const firstTspan = tspans[0];
-      const usesDy = firstTspan.hasAttribute('dy');
-      
-      // Store positioning attributes
-      const baseX = firstTspan.getAttribute('x') || '192';
-      const tspanStyle = firstTspan.getAttribute('style') || '';
-      
-      let lineSpacing: number;
-      
-      if (usesDy) {
-        // Calculate line spacing from dy values
-        if (tspans.length > 1) {
-          const firstDy = parseFloat(tspans[1].getAttribute('dy') || '0');
-          lineSpacing = firstDy || (adjustedFontSize * 1.25);
-        } else {
-          lineSpacing = adjustedFontSize * 1.25;
-        }
-      } else {
-        // Calculate line spacing from y positions
-        const baseY = parseFloat(firstTspan.getAttribute('y') || '100');
-        lineSpacing = adjustedFontSize * 1.25; // fallback
-        
-        if (tspans.length > 1) {
-          const firstY = parseFloat(tspans[0].getAttribute('y') || '0');
-          const secondY = parseFloat(tspans[1].getAttribute('y') || '0');
-          lineSpacing = secondY - firstY;
-        }
+    updateTextElement(svgDoc, textElement, value, maxTextWidth);
+  });
+
+  await Promise.all(updates);
+};
+
+/**
+ * Update a standard text element with value
+ */
+const updateTextElement = (
+  svgDoc: Document,
+  textElement: SVGTextElement,
+  value: string,
+  maxTextWidth: number
+): void => {
+  const originalFontSize = parseFloat(textElement.getAttribute('font-size') || '32');
+  let adjustedFontSize = originalFontSize;
+
+  const dominantBaseline = textElement.getAttribute('dominant-baseline');
+  const isMiddleAligned = dominantBaseline === 'middle';
+
+  const tspans = textElement.querySelectorAll('tspan');
+  if (tspans.length > 0) {
+    const lines = value.split('\n');
+    
+    let longestLine = '';
+    lines.forEach(line => {
+      if (line.length > longestLine.length) {
+        longestLine = line;
       }
+    });
 
-      // Calculate vertical offset for middle alignment
-      let verticalOffset = 0;
-      if (isMiddleAligned && lines.length > 1) {
-        // Total height of text block (n-1 spacings between n lines)
-        const totalHeight = (lines.length - 1) * lineSpacing;
-        // Offset to center the block (move up by half the total height)
-        verticalOffset = -totalHeight / 2;
-      }
-
-      // Remove all existing tspans
-      tspans.forEach(tspan => tspan.remove());
-
-      // Create new tspans for all lines
-      lines.forEach((line, index) => {
-        const tspan = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-        tspan.textContent = line;
-        
-        // Set x position
-        tspan.setAttribute('x', baseX);
-        
-        // Apply positioning based on original method
-        if (usesDy) {
-          // Use dy for relative positioning
-          if (index === 0) {
-            // First line: apply vertical offset for middle alignment
-            tspan.setAttribute('dy', verticalOffset.toString());
-          } else {
-            // Subsequent lines: use relative spacing
-            tspan.setAttribute('dy', lineSpacing.toString());
-          }
-        } else {
-          // Use absolute y positioning
-          const baseY = parseFloat(firstTspan.getAttribute('y') || '100');
-          const yPosition = baseY + verticalOffset + (index * lineSpacing);
-          tspan.setAttribute('y', yPosition.toString());
-        }
-        
-        // Preserve the original style attributes for proper alignment
-        if (tspanStyle) {
-          tspan.setAttribute('style', tspanStyle);
-        }
-        
-        textElement.appendChild(tspan);
-      });
-    } else {
-      // Single-line: update text and calculate font size
-      const text = value || '';
+    if (longestLine) {
       adjustedFontSize = calculateFontSize(
-        text,
+        longestLine,
         maxTextWidth,
         originalFontSize,
         textElement
       );
-      
-      textElement.setAttribute('font-size', adjustedFontSize.toString());
-      textElement.textContent = text;
     }
-  });
+
+    textElement.setAttribute('font-size', adjustedFontSize.toString());
+
+    const firstTspan = tspans[0];
+    const usesDy = firstTspan.hasAttribute('dy');
+    const baseX = firstTspan.getAttribute('x') || '192';
+    const tspanStyle = firstTspan.getAttribute('style') || '';
+    
+    let lineSpacing: number;
+    
+    if (usesDy) {
+      if (tspans.length > 1) {
+        const firstDy = parseFloat(tspans[1].getAttribute('dy') || '0');
+        lineSpacing = firstDy || (adjustedFontSize * 1.25);
+      } else {
+        lineSpacing = adjustedFontSize * 1.25;
+      }
+    } else {
+      lineSpacing = adjustedFontSize * 1.25;
+      if (tspans.length > 1) {
+        const firstY = parseFloat(tspans[0].getAttribute('y') || '0');
+        const secondY = parseFloat(tspans[1].getAttribute('y') || '0');
+        lineSpacing = secondY - firstY;
+      }
+    }
+
+    let verticalOffset = 0;
+    if (isMiddleAligned && lines.length > 1) {
+      const totalHeight = (lines.length - 1) * lineSpacing;
+      verticalOffset = -totalHeight / 2;
+    }
+
+    tspans.forEach(tspan => tspan.remove());
+
+    lines.forEach((line, index) => {
+      const tspan = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+      tspan.textContent = line;
+      tspan.setAttribute('x', baseX);
+      
+      if (usesDy) {
+        if (index === 0) {
+          tspan.setAttribute('dy', verticalOffset.toString());
+        } else {
+          tspan.setAttribute('dy', lineSpacing.toString());
+        }
+      } else {
+        const baseY = parseFloat(firstTspan.getAttribute('y') || '100');
+        const yPosition = baseY + verticalOffset + (index * lineSpacing);
+        tspan.setAttribute('y', yPosition.toString());
+      }
+      
+      if (tspanStyle) {
+        tspan.setAttribute('style', tspanStyle);
+      }
+      
+      textElement.appendChild(tspan);
+    });
+  } else {
+    const text = value || '';
+    adjustedFontSize = calculateFontSize(
+      text,
+      maxTextWidth,
+      originalFontSize,
+      textElement
+    );
+    
+    textElement.setAttribute('font-size', adjustedFontSize.toString());
+    textElement.textContent = text;
+  }
 };
 
 /**
@@ -192,7 +262,6 @@ const calculateFontSize = (
 ): number => {
   if (!text) return originalFontSize;
 
-  // Create a temporary SVG to measure text width
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.style.position = 'absolute';
   svg.style.visibility = 'hidden';
@@ -201,7 +270,6 @@ const calculateFontSize = (
   const tempText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
   tempText.textContent = text;
   
-  // Copy relevant attributes
   const fontFamily = textElement.getAttribute('font-family') || 'sans-serif';
   const fontWeight = textElement.getAttribute('font-weight') || 'normal';
   
@@ -211,18 +279,15 @@ const calculateFontSize = (
   
   svg.appendChild(tempText);
 
-  // Measure text width at original font size
   let bbox = tempText.getBBox();
   let currentWidth = bbox.width;
   let fontSize = originalFontSize;
 
-  // If text fits, return original size
   if (currentWidth <= maxWidth) {
     document.body.removeChild(svg);
     return originalFontSize;
   }
 
-  // Binary search for appropriate font size
   let minSize = 8;
   let maxSize = originalFontSize;
   

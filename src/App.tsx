@@ -80,7 +80,7 @@ function App() {
     }
   };
 
-  const handleExportSVG = () => {
+  const handleExportSVG = async () => {
     const parser = new DOMParser();
     const svgDoc = parser.parseFromString(currentTemplate.svgContent, 'image/svg+xml');
     const svgElement = svgDoc.querySelector('svg');
@@ -106,8 +106,8 @@ function App() {
     const padding = 20;
     const maxTextWidth = svgWidth - (padding * 2);
 
-    // Update text fields in the SVG
-    updateSVGTextFields(svgDoc, textFieldValues, maxTextWidth);
+    // Update text fields in the SVG (async for QR codes, etc.)
+    await updateSVGTextFields(svgDoc, textFieldValues, maxTextWidth, currentTemplate.fieldMetadata);
 
     // Serialize the updated SVG
     const serializer = new XMLSerializer();

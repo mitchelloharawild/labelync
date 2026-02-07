@@ -31,6 +31,7 @@ Simply visit <https://pkg.mitchelloharawild.com/phomemo-pwa> to start using the 
 - 💾 **Save Settings** - Your printer and paper settings are remembered between sessions
 - 🔒 **Privacy First** - All processing happens locally in your browser
 - 🎨 **SVG Templates** - Use customizable SVG templates with replaceable content
+- 📅 **Special Field Types** - Support for dates, QR codes, and image uploads in templates
 
 ## 📖 Usage Guide
 
@@ -43,13 +44,17 @@ Simply visit <https://pkg.mitchelloharawild.com/phomemo-pwa> to start using the 
    - Choose your label's paper type
    - Set the appropriate page size
    - Save your configuration
-4. **Design your label** - Use the form to add:
-   - Text content
-   - Images
-   - QR codes
-   - Custom formatting
-5. **Preview** - Review your design in the real-time canvas preview
-6. **Print** - Click "🖨 Print Sticker" to send to your printer
+4. **Choose or create a template**
+   - Select from built-in templates (see [Template Examples](examples/README.md))
+   - Upload your own SVG template (see [Template Documentation](docs/templates.md))
+   - Templates support text, dates, QR codes, and images
+5. **Design your label** - Fill in the form fields:
+   - **Text fields**: Type your content
+   - **Date fields**: Pick a date using the date picker
+   - **QR code fields**: Enter text/URL to encode
+   - **Image fields**: Upload photos or logos
+6. **Preview** - Review your design in the real-time canvas preview
+7. **Print** - Click "🖨 Print Sticker" to send to your printer
 
 ### Installing as a PWA
 

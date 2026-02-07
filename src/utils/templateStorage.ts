@@ -1,4 +1,4 @@
-import type { Template } from '../types';
+import type { Template, FieldType } from '../types';
 
 const TEMPLATES_KEY = 'phomemo_templates';
 const DEFAULT_TEMPLATE_ID = 'default_no_template';
@@ -92,8 +92,14 @@ export const createDefaultTemplate = (): Template => {
     id: DEFAULT_TEMPLATE_ID,
     name: 'No template',
     svgContent,
-    textFieldIds: ['Text'],
     textFieldValues: { Text: 'Line 1\nLine 2\nLine 3' },
+    fieldMetadata: [
+      {
+        id: 'Text',
+        type: 'text' as FieldType,
+        label: 'Text'
+      }
+    ],
     createdAt: 0,
     lastUsedAt: 0
   };

@@ -50,12 +50,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
     setTemplates(sorted);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-    }
-  };
+
 
   const generateThumbnail = async (svgContent: string): Promise<string> => {
     return new Promise((resolve) => {
@@ -102,10 +97,10 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
     const reader = new FileReader();
     reader.onload = async (event) => {
       const svgContent = event.target?.result as string;
-      const { ids, defaults } = extractTextFieldIds(svgContent);
+      const { defaults, metadata } = extractTextFieldIds(svgContent);
       
-      if (ids.length === 0) {
-        alert('The SVG file must contain text elements with id attributes');
+      if (metadata.length === 0) {
+        alert('The SVG file must contain elements with id attributes (text, rect, or image elements)');
         return;
       }
 
@@ -116,8 +111,8 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
         id: generateTemplateId(),
         name: file.name.replace('.svg', ''),
         svgContent,
-        textFieldIds: ids,
         textFieldValues: defaults,
+        fieldMetadata: metadata,
         thumbnail,
         createdAt: now,
         lastUsedAt: now
@@ -128,6 +123,11 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
     };
     
     reader.readAsText(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     
     // Reset file input
     if (fileInputRef.current) {
@@ -166,6 +166,22 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
+  };
+
+  // Helper to format field type counts
+  const getFieldTypeSummary = (template: Template): string => {
+    const counts: Record<string, number> = {};
+    template.fieldMetadata.forEach(meta => {
+      counts[meta.type] = (counts[meta.type] || 0) + 1;
+    });
+
+    const parts: string[] = [];
+    if (counts.text) parts.push(`${counts.text} text`);
+    if (counts.date) parts.push(`${counts.date} date`);
+    if (counts.qr) parts.push(`${counts.qr} QR`);
+    if (counts.image) parts.push(`${counts.image} image`);
+
+    return parts.join(', ') || `${template.fieldMetadata.length} field${template.fieldMetadata.length !== 1 ? 's' : ''}`;
   };
 
   if (!isOpen) return null;
@@ -226,7 +242,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
                 <div className="template-info">
                   <div className="template-name">{template.name}</div>
                   <div className="template-meta">
-                    {template.textFieldIds.length} field{template.textFieldIds.length !== 1 ? 's' : ''}
+                    {getFieldTypeSummary(template)}
                   </div>
                 </div>
               </div>

@@ -6,12 +6,35 @@ export interface FormData {
   image: File | null;
 }
 
+// Field types supported in SVG templates
+export enum FieldType {
+  TEXT = 'text',
+  DATE = 'date',
+  QR = 'qr',
+  IMAGE = 'image'
+}
+
+// Metadata for a field in an SVG template
+export interface FieldMetadata {
+  id: string;
+  type: FieldType;
+  label?: string; // Optional display label from data-label attribute
+  // QR code specific options
+  qrVersion?: string; // QR code version (1-40, or 'auto')
+  qrErrorCorrection?: 'L' | 'M' | 'Q' | 'H'; // Error correction level
+  // Date specific options
+  dateFormat?: string; // Date format string (e.g., 'YYYY-MM-DD', 'DD/MM/YYYY')
+  // Image specific options
+  imageWidth?: number;
+  imageHeight?: number;
+}
+
 export interface Template {
   id: string;
   name: string;
   svgContent: string;
-  textFieldIds: string[];
   textFieldValues: Record<string, string>;
+  fieldMetadata: FieldMetadata[];
   thumbnail?: string; // base64 encoded preview image
   createdAt: number;
   lastUsedAt: number;

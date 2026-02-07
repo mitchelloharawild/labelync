@@ -1,0 +1,98 @@
+<!--
+  Example SVG Template: Product Label with QR Code
+  
+  QR Code Field Schema:
+  - data-field-type="qr": Marks this element as a QR code placeholder
+  - data-label: Display label for the form field
+  - data-qr-version: QR code version (1-40, or 'auto')
+  - data-qr-error-correction: Error correction level ('L', 'M', 'Q', 'H')
+    - L: Low (7% recovery)
+    - M: Medium (15% recovery) - default
+    - Q: Quartile (25% recovery)
+    - H: High (30% recovery)
+  
+  Note: Use a <rect> element as the placeholder for QR codes.
+  The rect will be replaced with an <image> element containing the generated QR code.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="300" viewBox="0 0 384 300">
+  <!-- Background -->
+  <rect width="384" height="300" fill="white"/>
+  
+  <!-- Border -->
+  <rect x="10" y="10" width="364" height="280" fill="none" stroke="black" stroke-width="2"/>
+  
+  <!-- Product name (text) -->
+  <text 
+    id="product_name" 
+    x="192" 
+    y="40" 
+    font-size="24" 
+    font-weight="bold" 
+    text-anchor="middle" 
+    font-family="Arial, sans-serif"
+    data-field-type="text"
+    data-label="Product Name">
+    Awesome Product
+  </text>
+  
+  <!-- SKU (text) -->
+  <text 
+    id="sku" 
+    x="192" 
+    y="70" 
+    font-size="14" 
+    text-anchor="middle" 
+    font-family="monospace"
+    data-field-type="text"
+    data-label="SKU">
+    SKU-12345
+  </text>
+  
+  <!-- QR Code placeholder (will be replaced with actual QR code) -->
+  <rect 
+    id="qr_code" 
+    x="142" 
+    y="90" 
+    width="100" 
+    height="100" 
+    fill="#f0f0f0" 
+    stroke="#999" 
+    stroke-width="1"
+    data-field-type="qr"
+    data-label="Product URL"
+    data-qr-version="auto"
+    data-qr-error-correction="M"/>
+  
+  <!-- Label for QR code -->
+  <text x="192" y="205" font-size="12" text-anchor="middle" font-family="Arial, sans-serif" fill="#666">
+    Scan for details
+  </text>
+  
+  <!-- Description (multi-line text) -->
+  <text 
+    id="description" 
+    x="192" 
+    y="230" 
+    font-size="14" 
+    text-anchor="middle" 
+    font-family="Arial, sans-serif"
+    data-field-type="text"
+    data-label="Description">
+    <tspan x="192" dy="0">High-quality product</tspan>
+    <tspan x="192" dy="18">made with care</tspan>
+  </text>
+  
+  <!-- Price (text) -->
+  <text 
+    id="price" 
+    x="192" 
+    y="275" 
+    font-size="18" 
+    font-weight="bold" 
+    text-anchor="middle" 
+    font-family="Arial, sans-serif"
+    data-field-type="text"
+    data-label="Price">
+    $99.99
+  </text>
+</svg>
