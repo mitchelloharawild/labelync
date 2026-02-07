@@ -1,37 +1,68 @@
-# Phomemo M110 Sticker Printer Web App
+# Phomemo Label Printer Web App
 
 A modern Progressive Web App (PWA) for printing custom stickers using the Phomemo M110 printer via Web Serial API.
 
-## Features
+> **Disclaimer:** This project was mostly vibe-coded with Claude 🤖
+> Please report any issues here: <https://github.com/mitchelloharawild/phomemo-pwa/issues>
 
-- 🖨️ Direct connection to Phomemo M110 printer via Web Serial API
-- 📱 Progressive Web App - installable on desktop and mobile
-- 🎨 Custom sticker design with:
-  - QR codes
-  - Custom text (multi-line support)
-  - Date stamps
-  - Image uploads with automatic dithering
-- 🎯 Real-time preview
-- ⚡ Built with modern React + Vite
+This app uses the [Web Serial API over Bluetooth](https://developer.chrome.com/blog/serial-over-bluetooth/), which requires a modern Chromium-based web browser (Chrome/Chromium 89+, Microsoft Edge 89+, Opera 75+). Safari and Firefox do not currently support the Web Serial API.
 
-## Technology Stack
+## 🖨️ Supported Printers
 
-- **React** - UI framework
-- **Vite** - Build tool and dev server
-- **vite-plugin-pwa** - PWA capabilities with Workbox
-- **Web Serial API** - Direct printer communication
-- **QRCode** - QR code generation
-- **Canvas API** - Image processing and rendering
+* ✅ **Phomemo M110**
+* ❓ **Phomemo M120** (untested)
+* ❓ **Phomemo M220** (untested)
 
-## Prerequisites
+I personally own and use a Phomemo M110, and I have not been able to test other devices. All other implementations are based on the fantastic [vivier/phomemo-tools](https://github.com/vivier/phomemo-tools) project. 
 
-- Node.js 16+ and npm
-- A browser with Web Serial API support (Chrome, Edge, Opera)
-- Phomemo M110 printer
+**Have a different Phomemo printer?** Please create an issue reporting if this web app works for you (or doesn't)!
+
+## 🚀 Quick Start
+
+Simply visit <https://pkg.mitchelloharawild.com/phomemo-pwa> to start using the app immediately - no installation required!
+
+## ✨ Features
+
+- ⚡ **Direct Connection** - Connect to Phomemo printers via Web Serial API over Bluetooth
+- 🖨️ **Device-Specific Settings** - Printer-specific device and paper configuration
+- 📱 **Progressive Web App** - Install on desktop and mobile devices for offline access
+- 🎯 **Real-time Preview** - See exactly what will print before sending to device
+- 💾 **Save Settings** - Your printer and paper settings are remembered between sessions
+- 🔒 **Privacy First** - All processing happens locally in your browser
+
+## 📖 Usage Guide
+
+1. **Access the app** - Navigate to <https://pkg.mitchelloharawild.com/phomemo-pwa>
+2. **Connect printer** 
+   - Click the "Connect printer" button
+   - Select your Phomemo printer from the device list
+   - Grant the necessary permissions
+3. **Configure paper settings**
+   - Choose your label's paper type
+   - Set the appropriate page size
+   - Save your configuration
+4. **Design your label** - Use the form to add:
+   - Text content
+   - Images
+   - QR codes
+   - Custom formatting
+5. **Preview** - Review your design in the real-time canvas preview
+6. **Print** - Click "🖨 Print Sticker" to send to your printer
+
+### Installing as a PWA
+
+- **Desktop:** Look for the install icon in your browser's address bar
+- **Mobile:** Use your browser's "Add to Home Screen" option
+
+# 💻 Development
 
 ## Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/mitchelloharawild/phomemo-pwa.git
+cd phomemo-pwa
+
 # Install dependencies
 npm install
 
@@ -43,105 +74,16 @@ npm run build
 
 # Preview production build
 npm run preview
+
+# Lint code
+npm run lint
 ```
 
-## Usage
-
-1. **Start the app** - Open in a Web Serial API compatible browser
-2. **Connect printer** - Click "Connect printer" and select your Phomemo M110
-3. **Design your sticker**:
-   - Enter QR code content (URLs, text, etc.)
-   - Set dimensions (default: 30mm x 20mm)
-   - Add custom text (supports multiple lines)
-   - Toggle date stamp
-   - Upload images (automatically converted to B&W)
-4. **Preview** - See real-time preview on canvas
-5. **Print** - Click "🖨 Print Sticker"
-
-## PWA Features
-
-The app can be installed as a PWA with:
-- Offline functionality
-- App-like experience
-- Automatic updates
-- Cached assets for faster loading
-
-## Project Structure
-
-```
-phomemo-printer-app/
-├── src/
-│   ├── components/
-│   │   ├── PrinterForm.jsx      # Form inputs
-│   │   ├── PrinterForm.css
-│   │   ├── PrinterCanvas.jsx    # Canvas preview
-│   │   └── PrinterCanvas.css
-│   ├── hooks/
-│   │   ├── usePrinter.js        # Printer connection/communication
-│   │   └── useCanvas.js         # Canvas rendering logic
-│   ├── App.jsx                  # Main app component
-│   ├── App.css
-│   ├── main.jsx                 # Entry point
-│   └── index.css
-├── vite.config.js               # Vite + PWA configuration
-└── package.json
-```
-
-## Browser Compatibility
-
-The Web Serial API is required and supported in:
-- Chrome 89+
-- Edge 89+
-- Opera 75+
-
-Note: Firefox and Safari do not currently support Web Serial API.
-
-## Printer Configuration
-
-Default settings (can be modified in `src/hooks/usePrinter.js`):
-- Darkness: 0x08 (range: 0x01 - 0x0f)
-- Speed: 0x05 (range: 0x01 - 0x05)
-- Paper type: 0x0a (Label with gaps)
-
-## Development
-
-### Custom Hooks
-
-- **usePrinter** - Manages printer connection and printing
-- **useCanvas** - Handles canvas rendering and updates
-
-### Components
-
-- **PrinterForm** - Input form for sticker configuration
-- **PrinterCanvas** - Canvas preview component
-
-## Building for Production
-
-```bash
-npm run build
-```
-
-The build output will be in the `dist/` directory and includes:
-- Minified assets
-- Service worker for offline support
-- PWA manifest
-- Optimized images
-
-## Deployment
-
-Deploy the `dist/` folder to any static hosting service:
-- Vercel
-- Netlify
-- GitHub Pages
-- Firebase Hosting
-- etc.
-
-Make sure HTTPS is enabled for PWA and Web Serial API functionality.
-
-## Credits
-
-Adapted from the original Phomemo printer web interface by [bdm-k](https://gist.github.com/bdm-k/fe903491a051251db688866b7d554065).
-
-## License
+## 📄 License
 
 MIT
+
+## 🙏 Acknowledgments
+
+- [vivier/phomemo-tools](https://github.com/vivier/phomemo-tools) - Reference implementation for Phomemo printer protocols
+- [Web Serial API](https://developer.chrome.com/articles/serial/) - Browser API documentation
