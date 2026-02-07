@@ -19,72 +19,16 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
     paperType: config.paperType,
     paperWidth: config.paperWidth,
     paperHeight: config.paperHeight,
-    orientation: config.orientation || 'portrait',
-    svgTemplate: config.svgTemplate,
-    svgTextFields: config.svgTextFields || {}
+    orientation: config.orientation || 'portrait'
   });
-
-  const [textFieldIds, setTextFieldIds] = React.useState<string[]>([]);
-  const [multiLineFields, setMultiLineFields] = React.useState<Set<string>>(new Set());
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-
-  const extractTextFieldIds = (svgContent: string): { ids: string[], defaults: Record<string, string>, multiLine: Set<string> } => {
-    const parser = new DOMParser();
-    const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
-    const textElements = svgDoc.querySelectorAll('text[id]');
-    
-    const ids: string[] = [];
-    const defaults: Record<string, string> = {};
-    const multiLine = new Set<string>();
-    
-    textElements.forEach(el => {
-      const id = el.getAttribute('id');
-      if (id) {
-        ids.push(id);
-        
-        // Check if text element has tspan children (multi-line)
-        const tspans = el.querySelectorAll('tspan');
-        if (tspans.length > 0) {
-          multiLine.add(id);
-          // Combine tspan text with newlines
-          const lines: string[] = [];
-          tspans.forEach(tspan => {
-            lines.push(tspan.textContent || '');
-          });
-          defaults[id] = lines.join('\n');
-        } else {
-          defaults[id] = el.textContent || '';
-        }
-      }
-    });
-    
-    return { ids, defaults, multiLine };
-  };
 
   React.useEffect(() => {
     setLocalConfig({
       paperType: config.paperType,
       paperWidth: config.paperWidth,
       paperHeight: config.paperHeight,
-      orientation: config.orientation || 'portrait',
-      svgTemplate: config.svgTemplate,
-      svgTextFields: config.svgTextFields || {}
+      orientation: config.orientation || 'portrait'
     });
-    
-    // Extract text field IDs from existing SVG template
-    if (config.svgTemplate) {
-      const { ids, defaults, multiLine } = extractTextFieldIds(config.svgTemplate);
-      setTextFieldIds(ids);
-      setMultiLineFields(multiLine);
-      
-      // If no saved values exist, use defaults from SVG
-      if (!config.svgTextFields || Object.keys(config.svgTextFields).length === 0) {
-        setLocalConfig(prev => ({
-          ...prev,
-          svgTextFields: defaults
-        }));
-      }
-    }
   }, [config]);
 
   if (!isOpen) return null;
@@ -101,65 +45,6 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
       ...prev,
       orientation
     }));
-  };
-
-  const handleTemplateUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate SVG file
-    if (!file.type.includes('svg')) {
-      alert('Please upload an SVG file');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const svgContent = event.target?.result as string;
-      const { ids, defaults, multiLine } = extractTextFieldIds(svgContent);
-      
-      // Initialize text field values with existing values or defaults from SVG
-      const initialTextFields: Record<string, string> = {};
-      ids.forEach(id => {
-        initialTextFields[id] = localConfig.svgTextFields[id] || defaults[id] || '';
-      });
-
-      setLocalConfig(prev => ({
-        ...prev,
-        svgTemplate: svgContent,
-        svgTextFields: initialTextFields
-      }));
-      setTextFieldIds(ids);
-      setMultiLineFields(multiLine);
-    };
-    reader.readAsText(file);
-  };
-
-  const handleTextFieldChange = (id: string, value: string) => {
-    setLocalConfig(prev => ({
-      ...prev,
-      svgTextFields: {
-        ...prev.svgTextFields,
-        [id]: value
-      }
-    }));
-  };
-
-  const handleTemplateButtonClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleRemoveTemplate = () => {
-    setLocalConfig(prev => ({
-      ...prev,
-      svgTemplate: undefined,
-      svgTextFields: {}
-    }));
-    setTextFieldIds([]);
-    setMultiLineFields(new Set());
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   const handleSave = () => {
@@ -246,72 +131,6 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
               />
             </div>
           </div>
-
-          <div className="form-group">
-            <label>Label Template:</label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".svg,image/svg+xml"
-              onChange={handleTemplateUpload}
-              style={{ display: 'none' }}
-            />
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <button
-                type="button"
-                className="button button-secondary"
-                onClick={handleTemplateButtonClick}
-              >
-                {localConfig.svgTemplate ? '📝 Change Template' : '📁 Upload SVG Template'}
-              </button>
-              {localConfig.svgTemplate && (
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  onClick={handleRemoveTemplate}
-                  style={{ background: '#dc3545' }}
-                >
-                  🗑️ Remove
-                </button>
-              )}
-            </div>
-            <small style={{ display: 'block', marginTop: '5px', color: '#666' }}>
-              Upload an SVG file with text elements (must have id attributes)
-            </small>
-          </div>
-
-          {textFieldIds.length > 0 && (
-            <div className="form-group">
-              <label>Template Text Fields:</label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {textFieldIds.map(id => (
-                  <div key={id} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                    <label htmlFor={`text-${id}`} style={{ fontSize: '0.9em', color: '#666' }}>
-                      {id}:
-                    </label>
-                    {multiLineFields.has(id) ? (
-                      <textarea
-                        id={`text-${id}`}
-                        value={localConfig.svgTextFields[id] || ''}
-                        onChange={(e) => handleTextFieldChange(id, e.target.value)}
-                        placeholder={`Enter value for ${id}`}
-                        rows={3}
-
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        id={`text-${id}`}
-                        value={localConfig.svgTextFields[id] || ''}
-                        onChange={(e) => handleTextFieldChange(id, e.target.value)}
-                        placeholder={`Enter value for ${id}`}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="modal-footer">

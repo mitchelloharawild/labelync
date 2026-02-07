@@ -1,9 +1,13 @@
 import { useEffect, useRef } from 'react';
-import type { FormData, PrinterConfig } from '../types';
+import type { Template, PrinterConfig } from '../types';
 
 const mmToPx = (mm: number): number => mm * 203 / 25.4;
 
-export const useCanvas = (formData: FormData, printerConfig: PrinterConfig) => {
+export const useCanvas = (
+  template: Template,
+  textFieldValues: Record<string, string>,
+  printerConfig: PrinterConfig
+) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -29,33 +33,9 @@ export const useCanvas = (formData: FormData, printerConfig: PrinterConfig) => {
     ctx.fillStyle = '#fff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw SVG template if present
-    if (printerConfig.svgTemplate && printerConfig.svgTextFields) {
-      drawSVGTemplate(ctx, canvas, printerConfig.svgTemplate, printerConfig.svgTextFields);
-      // If using template, skip the legacy drawing methods
-      return;
-    }
-
-    // Draw uploaded image if present
-    if (formData.image) {
-      drawImage(ctx, canvas, formData.image);
-    }
-
-    // Draw QR code
-    if (formData.qrText.trim()) {
-      drawQRCode(ctx, canvas, formData.qrText);
-    }
-
-    // Draw date
-    if (formData.useDate && formData.date) {
-      drawDate(ctx, canvas, formData.date);
-    }
-
-    // Draw centered text
-    if (formData.centeredText.trim()) {
-      drawCenteredText(ctx, canvas, formData.centeredText, formData.qrText.trim() !== '');
-    }
-  }, [formData, printerConfig]);
+    // Draw SVG template
+    drawSVGTemplate(ctx, canvas, template.svgContent, textFieldValues);
+  }, [template, textFieldValues, printerConfig]);
 
   return canvasRef;
 };
@@ -72,26 +52,99 @@ const drawSVGTemplate = (
   
   if (!svgElement) return;
 
-  // Update text elements with new values
+  // Get SVG dimensions
+  const svgWidth = parseFloat(svgElement.getAttribute('width') || '384');
+  const padding = 20; // 20px padding on each side
+  const maxTextWidth = svgWidth - (padding * 2);
+
+  // Update text elements with new values and adjust font size
   Object.entries(textFields).forEach(([id, value]) => {
-    const textElement = svgDoc.getElementById(id);
+    const textElement = svgDoc.getElementById(id) as SVGTextElement;
     if (!textElement) return;
+
+    // Get original font size
+    const originalFontSize = parseFloat(textElement.getAttribute('font-size') || '32');
+    let adjustedFontSize = originalFontSize;
 
     // Check if it's a multi-line text (has tspan children)
     const tspans = textElement.querySelectorAll('tspan');
     if (tspans.length > 0) {
       // Multi-line: split value by newlines and update tspans
       const lines = value.split('\n');
-      tspans.forEach((tspan, index) => {
-        if (index < lines.length) {
-          tspan.textContent = lines[index];
-        } else {
-          tspan.textContent = '';
+      
+      // Find the longest line
+      let maxLineLength = 0;
+      let longestLine = '';
+      lines.forEach(line => {
+        if (line.length > maxLineLength) {
+          maxLineLength = line.length;
+          longestLine = line;
         }
       });
+
+      // Calculate required font size based on longest line
+      if (longestLine) {
+        adjustedFontSize = calculateFontSize(
+          longestLine,
+          maxTextWidth,
+          originalFontSize,
+          textElement
+        );
+      }
+
+      // Update font size
+      textElement.setAttribute('font-size', adjustedFontSize.toString());
+
+      // Get the first tspan's y position and x position to use as baseline
+      const firstTspan = tspans[0];
+      const baseY = parseFloat(firstTspan.getAttribute('y') || '100');
+      const baseX = firstTspan.getAttribute('x') || '192';
+      
+      // Store the style attribute from the first tspan to preserve formatting
+      const tspanStyle = firstTspan.getAttribute('style') || '';
+      
+      // Calculate original line spacing from the first two tspans
+      let lineHeight = originalFontSize * 1.25; // fallback based on original font size
+      if (tspans.length > 1) {
+        const firstY = parseFloat(tspans[0].getAttribute('y') || '0');
+        const secondY = parseFloat(tspans[1].getAttribute('y') || '0');
+        lineHeight = secondY - firstY; // Use original spacing as-is
+      }
+
+      // Remove all existing tspans
+      tspans.forEach(tspan => tspan.remove());
+
+      // Create new tspans for all lines
+      lines.forEach((line, index) => {
+        const tspan = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+        tspan.textContent = line;
+        
+        // Set absolute y position for each line
+        const yPosition = baseY + (index * lineHeight);
+        tspan.setAttribute('y', yPosition.toString());
+        
+        // Use consistent x position for all lines
+        tspan.setAttribute('x', baseX);
+        
+        // Preserve the original style attributes for proper alignment
+        if (tspanStyle) {
+          tspan.setAttribute('style', tspanStyle);
+        }
+        
+        textElement.appendChild(tspan);
+      });
     } else {
-      // Single-line: just update the text content
-      textElement.textContent = value;
+      // Single-line: update text and calculate font size
+      const text = value || '';
+      adjustedFontSize = calculateFontSize(
+        text,
+        maxTextWidth,
+        originalFontSize,
+        textElement
+      );
+      
+      textElement.setAttribute('font-size', adjustedFontSize.toString());
+      textElement.textContent = text;
     }
   });
 
@@ -133,95 +186,64 @@ const drawSVGTemplate = (
   img.src = url;
 };
 
-const drawImage = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, file: File): void => {
-  const img = new Image();
-  const reader = new FileReader();
+// Helper function to calculate appropriate font size for text width
+const calculateFontSize = (
+  text: string,
+  maxWidth: number,
+  originalFontSize: number,
+  textElement: SVGTextElement
+): number => {
+  if (!text) return originalFontSize;
 
-  reader.onload = (event) => {
-    if (!event.target?.result) return;
-    
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  // Create a temporary SVG to measure text width
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.style.position = 'absolute';
+  svg.style.visibility = 'hidden';
+  document.body.appendChild(svg);
 
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
-      // Check if already black and white
-      let isBlackAndWhite = true;
-      for (let i = 0; i < data.length; i += 4) {
-        if (data[i] !== data[i + 1] || data[i] !== data[i + 2]) {
-          isBlackAndWhite = false;
-          break;
-        }
-      }
-
-      if (!isBlackAndWhite) {
-        // Floyd-Steinberg Dithering
-        for (let i = 0; i < data.length; i += 4) {
-          let oldPixel = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-          const newPixel = oldPixel < 128 ? 0 : 255;
-          const quantError = oldPixel - newPixel;
-
-          data[i] = data[i + 1] = data[i + 2] = newPixel;
-
-          if (i + 4 < data.length) data[i + 4] += quantError * 7 / 16;
-          if (i + canvas.width * 4 - 4 < data.length) data[i + canvas.width * 4 - 4] += quantError * 3 / 16;
-          if (i + canvas.width * 4 < data.length) data[i + canvas.width * 4] += quantError * 5 / 16;
-          if (i + canvas.width * 4 + 4 < data.length) data[i + canvas.width * 4 + 4] += quantError * 1 / 16;
-        }
-      }
-
-      ctx.putImageData(imageData, 0, 0);
-    };
-    img.src = event.target.result as string;
-  };
-
-  reader.readAsDataURL(file);
-};
-
-const drawQRCode = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, text: string): void => {
-  const qrSize = 0.5 * canvas.height;
+  const tempText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  tempText.textContent = text;
   
-  // Use canvas-based QR code generation
-  import('qrcode').then((QRCode) => {
-    const qrCanvas = document.createElement('canvas');
-    QRCode.toCanvas(qrCanvas, text, {
-      width: qrSize,
-      margin: 0,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
-    }, (error?: Error | null) => {
-      if (!error) {
-        ctx.drawImage(qrCanvas, 10, 10, qrSize, qrSize);
-      }
-    });
-  });
-};
+  // Copy relevant attributes
+  const fontFamily = textElement.getAttribute('font-family') || 'sans-serif';
+  const fontWeight = textElement.getAttribute('font-weight') || 'normal';
+  
+  tempText.setAttribute('font-family', fontFamily);
+  tempText.setAttribute('font-weight', fontWeight);
+  tempText.setAttribute('font-size', originalFontSize.toString());
+  
+  svg.appendChild(tempText);
 
-const drawDate = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, date: string): void => {
-  ctx.font = '24px Arial';
-  ctx.fillStyle = '#000';
-  ctx.textAlign = 'right';
-  ctx.fillText(date, canvas.width - 10, 20);
-};
+  // Measure text width at original font size
+  let bbox = tempText.getBBox();
+  let currentWidth = bbox.width;
+  let fontSize = originalFontSize;
 
-const drawCenteredText = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, text: string, hasQRCode: boolean): void => {
-  const lines = text.split('\n');
-  ctx.font = '32pt Arial';
-  ctx.fillStyle = '#000';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-
-  const lineHeight = 40;
-  let centerY = canvas.height / 2 - (lineHeight * (lines.length - 1)) / 2;
-
-  if (hasQRCode) {
-    centerY = centerY + canvas.height / 4;
+  // If text fits, return original size
+  if (currentWidth <= maxWidth) {
+    document.body.removeChild(svg);
+    return originalFontSize;
   }
 
-  lines.forEach((line, i) => {
-    ctx.fillText(line, canvas.width / 2, centerY + i * lineHeight);
-  });
+  // Binary search for appropriate font size
+  let minSize = 8;
+  let maxSize = originalFontSize;
+  
+  while (maxSize - minSize > 0.5) {
+    fontSize = (minSize + maxSize) / 2;
+    tempText.setAttribute('font-size', fontSize.toString());
+    bbox = tempText.getBBox();
+    currentWidth = bbox.width;
+
+    if (currentWidth > maxWidth) {
+      maxSize = fontSize;
+    } else {
+      minSize = fontSize;
+    }
+  }
+
+  document.body.removeChild(svg);
+  return Math.floor(minSize);
 };
+
+

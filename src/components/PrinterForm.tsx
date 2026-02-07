@@ -1,70 +1,83 @@
 import React from 'react';
-import type { FormData } from '../types';
+import type { Template } from '../types';
 import './PrinterForm.css';
 
 interface PrinterFormProps {
-  formData: FormData;
-  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
+  template: Template | null;
+  textFieldValues: Record<string, string>;
+  onTextFieldChange: (fieldId: string, value: string) => void;
 }
 
-const PrinterForm = ({ formData, setFormData }: PrinterFormProps) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const target = e.target as HTMLInputElement;
-    const { name, value, type, checked } = target;
-    
-    if (type === 'checkbox') {
-      setFormData(prev => ({ ...prev, [name]: checked }));
-    
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+const PrinterForm = ({ template, textFieldValues, onTextFieldChange }: PrinterFormProps) => {
+  const handleChange = (fieldId: string, value: string) => {
+    onTextFieldChange(fieldId, value);
   };
+
+  const extractMultiLineFields = (svgContent: string): Set<string> => {
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
+    const textElements = svgDoc.querySelectorAll('text[id]');
+    
+    const multiLine = new Set<string>();
+    
+    textElements.forEach(el => {
+      const id = el.getAttribute('id');
+      if (id) {
+        const tspans = el.querySelectorAll('tspan');
+        if (tspans.length > 0) {
+          multiLine.add(id);
+        }
+      }
+    });
+    
+    return multiLine;
+  };
+
+  if (!template) {
+    return (
+      <div className="printer-form">
+        <div className="no-template-message">
+          <p>📋 No template selected</p>
+          <p style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>
+            Click "Template Manager" to upload or select a template
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const multiLineFields = extractMultiLineFields(template.svgContent);
 
   return (
     <form className="printer-form">
-      <label htmlFor="qrText">QR Code Content:</label>
-      <input
-        type="text"
-        id="qrText"
-        name="qrText"
-        value={formData.qrText}
-        onChange={handleChange}
-        placeholder="Enter text for QR code"
-      />
-
-      <label htmlFor="centeredText">Text:</label>
-      <textarea
-        id="centeredText"
-        name="centeredText"
-        value={formData.centeredText}
-        onChange={handleChange}
-        placeholder="Enter text to center"
-        rows={3}
-      />
-
-      <div className="date-picker-container">
-        <div className="checkbox-wrapper">
-          <input
-            type="checkbox"
-            id="useDate"
-            name="useDate"
-            checked={formData.useDate}
-            onChange={handleChange}
-          />
-          <label htmlFor="useDate">Include Date:</label>
-        </div>
-        {formData.useDate && (
-          <input
-            type="date"
-            id="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-          />
-        )}
+      <div className="template-name-display">
+        <span>📄 {template.name}</span>
       </div>
-
-
+      
+      {template.textFieldIds.map(fieldId => (
+        <div key={fieldId} className="form-field">
+          <label htmlFor={fieldId}>{fieldId}:</label>
+          {multiLineFields.has(fieldId) ? (
+            <textarea
+              id={fieldId}
+              name={fieldId}
+              value={textFieldValues[fieldId] || ''}
+              onChange={(e) => handleChange(fieldId, e.target.value)}
+              placeholder={`Enter ${fieldId}`}
+              rows={3}
+            />
+          ) : (
+            <input
+              type="text"
+              id={fieldId}
+              name={fieldId}
+              value={textFieldValues[fieldId] || ''}
+              onChange={(e) => handleChange(fieldId, e.target.value)}
+              placeholder={`Enter ${fieldId}`}
+            />
+          )}
+        </div>
+      ))}
     </form>
   );
 };

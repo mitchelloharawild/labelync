@@ -112,6 +112,16 @@ h2 {
   background-color: #1976D2;
 }
 
+.print-button.template-button {
+  background-color: #9C27B0;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.print-button.template-button:hover {
+  background-color: #7B1FA2;
+}
+
 @media (max-width: 480px) {
   .form-container {
     padding: 15px;

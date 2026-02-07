@@ -6,6 +6,17 @@ export interface FormData {
   image: File | null;
 }
 
+export interface Template {
+  id: string;
+  name: string;
+  svgContent: string;
+  textFieldIds: string[];
+  textFieldValues: Record<string, string>;
+  thumbnail?: string; // base64 encoded preview image
+  createdAt: number;
+  lastUsedAt: number;
+}
+
 export interface PrinterConfig {
   deviceModel: 'M110' | 'M120' | 'M220';
   darkness: number; // 0x01 - 0x0f
@@ -16,4 +27,5 @@ export interface PrinterConfig {
   orientation: 'portrait' | 'landscape'; // orientation affects printing rotation
   svgTemplate?: string; // SVG template content
   svgTextFields?: Record<string, string>; // text field IDs and their values
+  lastUsedTemplateId?: string; // ID of the last used template
 }

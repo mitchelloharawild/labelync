@@ -59,6 +59,31 @@
   margin-bottom: 0;
 }
 
+.template-name-display {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.no-template-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: #ccc;
+}
+
+.no-template-message p:first-child {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.form-field {
+  margin-bottom: 16px;
+}
+
 .checkbox-wrapper label {
   margin-bottom: 0;
 }
