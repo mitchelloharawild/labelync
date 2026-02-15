@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.2] - 2026-02-15
+
+- Added version to main page with manual update checking button
+
+
 ## [1.0.1] - 2026-02-15
 
 - Change template file picker to accept any file (preventing photo specific picker on Android)
