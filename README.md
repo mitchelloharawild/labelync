@@ -1,12 +1,12 @@
 # Labelync
 
-A modern Progressive Web App (PWA) for printing custom stickers using the Phomemo M110 printer via Web Serial API.
-
-> **Disclaimer:** This project was mostly vibe-coded with Claude 🤖
-> 
-> Please report any issues here: <https://github.com/mitchelloharawild/labelync/issues>
+**Labelync** (label + sync) allows you to wirelessly print to Bluetooth label printers directly from your web browser. Install it as a PWA on your phone or computer to print from anywhere, even without an internet connection.
 
 This app uses the [Web Serial API over Bluetooth](https://developer.chrome.com/blog/serial-over-bluetooth/), which requires a modern Chromium-based web browser (Chrome/Chromium 89+, Microsoft Edge 89+, Opera 75+). Safari and Firefox do not currently support the Web Serial API.
+
+## 🚀 Quick Start
+
+Simply visit <https://pkg.mitchelloharawild.com/labelync> to start using the app immediately - no installation required!
 
 ## 🖨️ Supported Printers
 
@@ -17,10 +17,6 @@ This app uses the [Web Serial API over Bluetooth](https://developer.chrome.com/b
 I personally own and use a Phomemo M110, and I have not been able to test other devices. All other implementations are based on the fantastic [vivier/phomemo-tools](https://github.com/vivier/phomemo-tools) project. 
 
 **Have a different Phomemo printer?** Please create an issue reporting if this web app works for you (or doesn't)!
-
-## 🚀 Quick Start
-
-Simply visit <https://pkg.mitchelloharawild.com/labelync> to start using the app immediately - no installation required!
 
 ## ✨ Features
 
