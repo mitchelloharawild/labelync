@@ -9,6 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,6 +21,46 @@ const rl = readline.createInterface({
 
 function question(query) {
   return new Promise(resolve => rl.question(query, resolve));
+}
+
+async function createGitHubRelease(version, changes) {
+  try {
+    // Get repository info from git remote
+    const remoteUrl = execSync('git config --get remote.origin.url', { encoding: 'utf8' }).trim();
+    const match = remoteUrl.match(/github\.com[:/](.+?)\/(.+?)(\.git)?$/);
+    
+    if (!match) {
+      console.log('⚠️  Could not parse GitHub repository from remote URL');
+      return false;
+    }
+
+    const [, owner, repo] = match;
+    const tag = `v${version}`;
+    
+    // Format release body
+    const body = changes.map(c => `- ${c}`).join('\n');
+    
+    // Check if gh CLI is available
+    try {
+      execSync('gh --version', { stdio: 'ignore' });
+    } catch {
+      console.log('\n⚠️  GitHub CLI (gh) not found. Install it to enable automatic releases:');
+      console.log('   https://cli.github.com/');
+      return false;
+    }
+
+    // Create release using gh CLI
+    const releaseCmd = `gh release create "${tag}" --title "Release ${tag}" --notes "${body.replace(/"/g, '\\"')}"`;
+    
+    console.log('\n📦 Creating GitHub release...');
+    execSync(releaseCmd, { stdio: 'inherit' });
+    console.log(`✓ GitHub release created: https://github.com/${owner}/${repo}/releases/tag/${tag}`);
+    
+    return true;
+  } catch (error) {
+    console.log(`\n⚠️  Failed to create GitHub release: ${error.message}`);
+    return false;
+  }
 }
 
 async function main() {
@@ -113,7 +154,35 @@ async function main() {
   console.log('2. Commit: git add . && git commit -m "Release v' + newVersion + '"');
   console.log('3. Tag: git tag v' + newVersion);
   console.log('4. Push: git push && git push --tags');
-  console.log('5. Build and deploy: npm run build');
+  
+  // Ask if user wants to create GitHub release
+  const createRelease = await question('\nCreate GitHub release now? (y/N): ');
+  
+  if (createRelease.toLowerCase() === 'y' || createRelease.toLowerCase() === 'yes') {
+    // First commit and tag
+    try {
+      console.log('\n📝 Committing changes...');
+      execSync('git add .', { stdio: 'inherit' });
+      execSync(`git commit -m "Release v${newVersion}"`, { stdio: 'inherit' });
+      console.log('✓ Changes committed');
+      
+      console.log(`\n🏷️  Creating tag v${newVersion}...`);
+      execSync(`git tag v${newVersion}`, { stdio: 'inherit' });
+      console.log('✓ Tag created');
+      
+      console.log('\n⬆️  Pushing to remote...');
+      execSync('git push && git push --tags', { stdio: 'inherit' });
+      console.log('✓ Pushed to remote');
+      
+      await createGitHubRelease(newVersion, changes);
+    } catch (error) {
+      console.log(`\n❌ Error during git operations: ${error.message}`);
+      console.log('You may need to complete the steps manually.');
+    }
+  } else {
+    console.log('5. Build and deploy: npm run build');
+    console.log('\n💡 Run with GitHub release automation next time!');
+  }
 
   rl.close();
 }
