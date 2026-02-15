@@ -1,6 +1,6 @@
 import type { Template, FieldType } from '../types';
 
-const TEMPLATES_KEY = 'phomemo_templates';
+const TEMPLATES_KEY = 'labelync_templates';
 const DEFAULT_TEMPLATE_ID = 'default_no_template';
 
 export const saveTemplate = (template: Template): void => {

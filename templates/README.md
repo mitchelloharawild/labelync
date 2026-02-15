@@ -1,6 +1,6 @@
 # Example SVG Templates
 
-This folder contains example SVG templates demonstrating the special field types supported by the Phomemo Printer PWA.
+This folder contains example SVG templates demonstrating the special field types supported by the Labelync PWA.
 
 ## Available Examples
 

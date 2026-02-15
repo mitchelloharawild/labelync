@@ -1,4 +1,4 @@
-# Phomemo Label Printer Web App
+# Labelync
 
 A modern Progressive Web App (PWA) for printing custom stickers using the Phomemo M110 printer via Web Serial API.
 

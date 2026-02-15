@@ -14,8 +14,8 @@ export default defineConfig({
         type: 'module',
       },
       manifest: {
-        name: 'Phomemo Printer',
-        short_name: 'Phomemo Printer',
+        name: 'Labelync',
+        short_name: 'Labelync',
         description: 'Print custom stickers with Phomemo label printers',
         theme_color: '#333333',
         background_color: '#333333',

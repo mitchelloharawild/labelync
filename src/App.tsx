@@ -229,7 +229,7 @@ function App() {
       )}
       
       <div className="form-container">
-        <h2>Phomemo Printer</h2>
+        <h2>Labelync</h2>
         
         {!isConnected ? (
           <>
