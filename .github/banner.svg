@@ -1,0 +1,30 @@
+<svg width="1200" height="300" viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient">
+      <stop offset="0" stop-color="#1a1f2e"/>
+      <stop offset="1" stop-color="#2a3544"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="300" fill="url(#bgGradient)"/>
+
+  <g transform="matrix(.45 0 0 .45 70 64.6)">
+    <rect width="452" height="330" rx="84" fill="#5a6575"/>
+    <path d="M104 217h244v129c0 18-10 28-28 28H132c-18 0-28-10-28-28Z" fill="#fff" stroke="#5a6575" stroke-width="11"/>
+    <g fill="#31d4c4">
+      <rect x="129" y="269" width="194" height="14" rx="7"/>
+      <rect x="129" y="304" width="138" height="14" rx="7"/>
+      <circle cx="314" cy="145" r="15"/>
+      <circle cx="138" cy="145" r="15"/>
+    </g>
+    <path d="M308 104c25 0 45 25 45 43" fill="none" stroke="#31d4c4" stroke-linecap="round" stroke-width="18"/>
+    <path d="M308 68c40 0 80 35 80 77" fill="none" stroke="#31d4c4" stroke-linecap="round" stroke-width="18"/>
+  </g>
+
+  <g transform="translate(0 12)" font-family="Arial, sans-serif">
+    <text x="330" y="140" fill="#fff" font-size="90" font-weight="bold">Labelync</text>
+    <text x="330" y="195" fill="#31d4c4" font-size="32" font-weight="bold">
+      Wireless Label Printing from Your Browser
+    </text>
+  </g>
+</svg>

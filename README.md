@@ -1,5 +1,7 @@
 # Labelync
 
+![Labelync Banner](.github/banner.svg)
+
 **Labelync** (label + sync) allows you to wirelessly print to Bluetooth label printers directly from your web browser. Install it as a PWA on your phone or computer to print from anywhere, even without an internet connection.
 
 This app uses the [Web Serial API over Bluetooth](https://developer.chrome.com/blog/serial-over-bluetooth/), which requires a modern Chromium-based web browser (Chrome/Chromium 89+, Microsoft Edge 89+, Opera 75+). Safari and Firefox do not currently support the Web Serial API.
