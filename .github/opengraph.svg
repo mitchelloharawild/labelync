@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="1280"
+   height="640"
+   viewBox="0 0 1280 640"
+   version="1.1"
+   id="svg708"
+   sodipodi:docname="opengraph.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview710"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="0.7405848"
+     inkscape:cx="581.97252"
+     inkscape:cy="462.47236"
+     inkscape:window-width="1920"
+     inkscape:window-height="1052"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g706" />
+  <defs
+     id="defs678">
+    <linearGradient
+       id="bgGradient"
+       gradientTransform="scale(2,0.5)"
+       x1="0"
+       y1="0"
+       x2="600"
+       y2="0"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0"
+         stop-color="#1a1f2e"
+         id="stop673" />
+      <stop
+         offset="1"
+         stop-color="#2a3544"
+         id="stop675" />
+    </linearGradient>
+  </defs>
+  <rect
+     width="1280"
+     height="640"
+     fill="url(#bgGradient)"
+     id="rect680"
+     x="0"
+     y="0"
+     style="fill:url(#bgGradient)" />
+  <g
+     transform="matrix(1.2179129,0,0,1.2179129,-15.253902,0.53778252)"
+     font-family="Arial, sans-serif"
+     id="g706">
+    <g
+       id="g941"
+       transform="translate(0,7.0675183)">
+      <g
+         transform="matrix(0.45,0,0,0.45,69.999999,169.84799)"
+         id="g700">
+        <rect
+           width="452"
+           height="330"
+           rx="84"
+           fill="#5a6575"
+           id="rect682"
+           x="0"
+           y="0" />
+        <path
+           d="m 104,217 h 244 v 129 c 0,18 -10,28 -28,28 H 132 c -18,0 -28,-10 -28,-28 z"
+           fill="#ffffff"
+           stroke="#5a6575"
+           stroke-width="11"
+           id="path684" />
+        <g
+           fill="#31d4c4"
+           id="g694">
+          <rect
+             x="129"
+             y="269"
+             width="194"
+             height="14"
+             rx="7"
+             id="rect686" />
+          <rect
+             x="129"
+             y="304"
+             width="138"
+             height="14"
+             rx="7"
+             id="rect688" />
+          <circle
+             cx="314"
+             cy="145"
+             r="15"
+             id="circle690" />
+          <circle
+             cx="138"
+             cy="145"
+             r="15"
+             id="circle692" />
+        </g>
+        <path
+           d="m 308,104 c 25,0 45,25 45,43"
+           fill="none"
+           stroke="#31d4c4"
+           stroke-linecap="round"
+           stroke-width="18"
+           id="path696" />
+        <path
+           d="m 308,68 c 40,0 80,35 80,77"
+           fill="none"
+           stroke="#31d4c4"
+           stroke-linecap="round"
+           stroke-width="18"
+           id="path698" />
+      </g>
+      <text
+         x="330"
+         y="257.24799"
+         fill="#ffffff"
+         font-size="90px"
+         font-weight="bold"
+         id="text702">Labelync</text>
+      <text
+         x="330"
+         y="312.24799"
+         fill="#31d4c4"
+         font-size="32px"
+         font-weight="bold"
+         id="text704">Wireless Label Printing from Your Browser</text>
+    </g>
+  </g>
+</svg>
