@@ -8,6 +8,7 @@ import { PWAUpdateNotification } from './components/PWAUpdateNotification';
 import { usePrinter } from './hooks/usePrinter';
 import { getDefaultConfig, loadPrinterConfig, savePrinterConfig } from './utils/printerStorage';
 import { getTemplate, getDefaultTemplate } from './utils/templateStorage';
+import { getFreshTextFieldValues } from './utils/svgTextUtils';
 
 import type { Template, PrinterConfig } from './types';
 import './App.css';
@@ -48,7 +49,7 @@ function App() {
           const template = getTemplate(savedConfig.lastUsedTemplateId);
           if (template) {
             setCurrentTemplate(template);
-            setTextFieldValues(template.textFieldValues);
+            setTextFieldValues(getFreshTextFieldValues(template.textFieldValues, template.fieldMetadata));
           } else {
             // Template not found, use default
             const defaultTemplate = getDefaultTemplate();
@@ -119,15 +120,16 @@ function App() {
   };
 
   const handleSelectTemplate = (template: Template) => {
+    const freshValues = getFreshTextFieldValues(template.textFieldValues, template.fieldMetadata);
     setCurrentTemplate(template);
-    setTextFieldValues(template.textFieldValues);
+    setTextFieldValues(freshValues);
     setHiddenFields({}); // Reset hidden fields for new template
-    
+
     // Update printer config with template info and save
     const updatedConfig: PrinterConfig = {
       ...printerConfig,
       svgTemplate: template.svgContent,
-      svgTextFields: template.textFieldValues,
+      svgTextFields: freshValues,
       lastUsedTemplateId: template.id
     };
     setPrinterConfig(updatedConfig);

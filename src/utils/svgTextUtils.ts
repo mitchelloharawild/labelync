@@ -103,6 +103,27 @@ export const extractTextFieldIds = (svgContent: string): TextFieldInfo => {
 };
 
 /**
+ * Get a template's text field values with date fields reset to today's date.
+ * Stored templates keep whatever date was set when they were last saved, so
+ * this refreshes date-type fields whenever a template is loaded into the form.
+ */
+export const getFreshTextFieldValues = (
+  textFieldValues: Record<string, string>,
+  fieldMetadata: FieldMetadata[]
+): Record<string, string> => {
+  const today = new Date().toISOString().split('T')[0];
+  const values = { ...textFieldValues };
+
+  fieldMetadata.forEach(meta => {
+    if (meta.type === FieldType.DATE) {
+      values[meta.id] = today;
+    }
+  });
+
+  return values;
+};
+
+/**
  * Update text elements in SVG with new values (async version)
  */
 export const updateSVGTextFields = async (
