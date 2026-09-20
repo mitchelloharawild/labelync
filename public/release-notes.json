@@ -1,10 +1,16 @@
 {
-  "version": "1.1.0",
-  "date": "2026-02-15",
+  "version": "2.0.0",
+  "date": "2026-09-20",
   "changes": [
-    "Rebranded project to labelync with updated logo and banners",
-    "Updated documentation and README",
-    "Improved GitHub release and deployment workflow",
-    "Added OpenGraph image for better social media sharing"
+    "Redesigned app shell with a responsive icon rail and split preview",
+    "Added light/dark theme toggle",
+    "Added experimental support for Phomemo M02/M02 Pro/M02S/T02 printers",
+    "Added CSV batch printing",
+    "Added barcode field type alongside QR support",
+    "Added one-click reconnect to previously authorized printers",
+    "Added copies stepper for printing multiple labels",
+    "Added print job success/failure notifications",
+    "Fixed letterbox template preview instead of stretching to paper size",
+    "Fixed date fields not refreshing to today when loading a template"
   ]
 }
