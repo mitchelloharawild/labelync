@@ -104,10 +104,24 @@ function App() {
     if (!canvas) return;
 
     setIsPrinting(true);
+    let printed = 0;
     try {
       for (let i = 0; i < copies; i++) {
         await printImage(canvas, printerConfig);
+        printed++;
       }
+      setNotification({
+        message: printed === 1 ? 'Label printed successfully.' : `Printed ${printed} labels successfully.`,
+        type: 'success'
+      });
+      setTimeout(() => setNotification(null), 5000);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'Unknown error';
+      const message = printed > 0
+        ? `Printed ${printed} of ${copies} label${copies === 1 ? '' : 's'}, then failed: ${reason}`
+        : `Print failed: ${reason}`;
+      setNotification({ message, type: 'error' });
+      setTimeout(() => setNotification(null), 5000);
     } finally {
       setIsPrinting(false);
     }

@@ -7,7 +7,7 @@ interface UsePrinterReturn {
   deviceId: string | null;
   connect: () => Promise<boolean>;
   disconnect: () => Promise<void>;
-  printImage: (canvas: HTMLCanvasElement, config: PrinterConfig) => Promise<boolean>;
+  printImage: (canvas: HTMLCanvasElement, config: PrinterConfig) => Promise<void>;
 }
 
 export const usePrinter = (): UsePrinterReturn => {
@@ -84,21 +84,19 @@ export const usePrinter = (): UsePrinterReturn => {
     return rotatedCanvas;
   };
 
-  const printImage = useCallback(async (canvas: HTMLCanvasElement, config: PrinterConfig): Promise<boolean> => {
+  const printImage = useCallback(async (canvas: HTMLCanvasElement, config: PrinterConfig): Promise<void> => {
     if (!serialPort) {
-      console.error('No device connected');
-      return false;
+      throw new Error('No printer connected');
     }
 
     // Rotate canvas if in landscape mode
-    const printCanvas = config.orientation === 'landscape' 
+    const printCanvas = config.orientation === 'landscape'
       ? rotateCanvas90Clockwise(canvas)
       : canvas;
 
     const ctx = printCanvas.getContext('2d');
     if (!ctx) {
-      console.error('Could not get canvas context');
-      return false;
+      throw new Error('Could not get canvas context');
     }
     const imageData = ctx.getImageData(0, 0, printCanvas.width, printCanvas.height);
 
@@ -153,11 +151,9 @@ export const usePrinter = (): UsePrinterReturn => {
       await writer.write(FOOTER);
 
       await writer.close();
-
-      return true;
     } catch (e) {
       console.error('Print error:', e);
-      return false;
+      throw e instanceof Error ? e : new Error('Print failed');
     }
   }, [serialPort]);
 
