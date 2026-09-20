@@ -16,9 +16,9 @@
   width: 100%;
   padding: 8px;
   margin-bottom: 12px;
-  border: 1px solid #666;
+  border: 1px solid #3a4350;
   border-radius: 4px;
-  background-color: #555;
+  background-color: #1f2630;
   color: white;
   box-sizing: border-box;
   font-family: inherit;
@@ -60,19 +60,19 @@
 }
 
 .template-name-display {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(49, 212, 196, 0.1);
   padding: 10px 12px;
   border-radius: 4px;
   margin-bottom: 16px;
   font-size: 14px;
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(49, 212, 196, 0.3);
 }
 
 .no-template-message {
   text-align: center;
   padding: 40px 20px;
-  color: #ccc;
+  color: #8892a0;
 }
 
 .no-template-message p:first-child {
@@ -99,7 +99,7 @@
 .field-toggle-btn {
   background: none;
   border: none;
-  color: #aaa;
+  color: #8892a0;
   cursor: pointer;
   padding: 4px 8px;
   font-size: 16px;
@@ -109,7 +109,7 @@
 }
 
 .field-toggle-btn:hover {
-  color: #fff;
+  color: #31d4c4;
 }
 
 .field-toggle-btn.hidden {
@@ -132,7 +132,7 @@
 .image-preview {
   margin-top: 8px;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(49, 212, 196, 0.05);
   border-radius: 4px;
   display: inline-block;
 }

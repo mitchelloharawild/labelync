@@ -8,7 +8,7 @@
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #333;
+  color: #fff;
 }
 
 .form-group input[type="range"] {
@@ -20,13 +20,12 @@
 .form-group select {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #3a4350;
   border-radius: 4px;
   font-size: 14px;
-}
+  background-color: #1f2630;
+  color: #fff;
 
-.form-group select {
-  background-color: white;
   cursor: pointer;
 }
 
@@ -40,7 +39,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #666;
+  color: #8892a0;
 }
 
 .button {
@@ -54,19 +53,19 @@
 }
 
 .button-primary {
-  background-color: #007bff;
-  color: white;
+  background-color: #31d4c4;
+  color: #1f2630;
 }
 
 .button-primary:hover {
-  background-color: #0056b3;
+  background-color: #28b9ab;
 }
 
 .button-secondary {
-  background-color: #6c757d;
+  background-color: #3a4350;
   color: white;
 }
 
 .button-secondary:hover {
-  background-color: #5a6268;
+  background-color: #4a5360;
 }
