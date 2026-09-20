@@ -73,7 +73,7 @@ function getPRNumber(commit) {
 /**
  * Get new contributors since last tag
  */
-async function getNewContributors(fromTag, owner, repo) {
+async function getNewContributors(fromTag) {
   try {
     const range = fromTag ? `${fromTag}..HEAD` : 'HEAD';
     
@@ -231,7 +231,7 @@ async function createGitHubRelease(version, changes, useConventionalCommits = fa
         body = formatReleaseNotes(commits, owner, repo);
         
         // Add new contributors section
-        const newContributors = await getNewContributors(lastTag, owner, repo);
+        const newContributors = await getNewContributors(lastTag);
         if (newContributors.length > 0) {
           body += '\n\n### 🎉 New Contributors\n\n';
           for (const contributor of newContributors) {
@@ -250,7 +250,7 @@ async function createGitHubRelease(version, changes, useConventionalCommits = fa
             }
             
             const prLink = contributor.pr ? ` in [#${contributor.pr}](https://github.com/${owner}/${repo}/pull/${contributor.pr})` : '';
-            body += `- **${contributor.author}**${prLink} made their first contribution!\n`;
+            body += `- **${username}**${prLink} made their first contribution!\n`;
           }
         }
         
