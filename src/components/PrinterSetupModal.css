@@ -99,6 +99,13 @@
   gap: 15px;
 }
 
+.protocol-family-note {
+  margin: -8px 0 20px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #666);
+  line-height: 1.4;
+}
+
 .range-labels {
   display: flex;
   justify-content: space-between;

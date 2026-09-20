@@ -1,5 +1,6 @@
 import React from 'react';
 import type { PrinterConfig } from '../types';
+import { getProtocolFamily, M02_FIXED_PAPER_WIDTH_MM } from '../types';
 import Modal from './Modal';
 import './PrinterSetupModal.css';
 
@@ -29,10 +30,24 @@ const PrinterSetupModal: React.FC<PrinterSetupModalProps> = ({
     }));
   };
 
+  // Switching device model can also switch protocol family; keep paperWidth
+  // consistent with the new family's fixed width (M02) right away, so the
+  // paper settings modal doesn't show a stale value from the other family.
+  const handleDeviceModelChange = (deviceModel: PrinterConfig['deviceModel']) => {
+    const protocolFamily = getProtocolFamily(deviceModel);
+    setLocalConfig(prev => ({
+      ...prev,
+      deviceModel,
+      ...(protocolFamily === 'M02' ? { paperWidth: M02_FIXED_PAPER_WIDTH_MM } : {})
+    }));
+  };
+
   const handleSave = () => {
     onSave(localConfig);
     onClose();
   };
+
+  const protocolFamily = getProtocolFamily(localConfig.deviceModel);
 
   const footer = (
     <>
@@ -52,49 +67,65 @@ const PrinterSetupModal: React.FC<PrinterSetupModalProps> = ({
             <select
               id="deviceModel"
               value={localConfig.deviceModel}
-              onChange={(e) => handleChange('deviceModel', e.target.value as PrinterConfig['deviceModel'])}
+              onChange={(e) => handleDeviceModelChange(e.target.value as PrinterConfig['deviceModel'])}
             >
               <option value="M110">Phomemo M110</option>
               <option value="M120">Phomemo M120</option>
               <option value="M220">Phomemo M220</option>
+              <option value="M02">Phomemo M02 (experimental)</option>
+              <option value="M02Pro">Phomemo M02 Pro (experimental)</option>
+              <option value="M02S">Phomemo M02S (experimental)</option>
+              <option value="T02">Phomemo T02 (experimental)</option>
             </select>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="darkness">
-              Darkness: {localConfig.darkness} (0x{localConfig.darkness.toString(16).padStart(2, '0').toUpperCase()})
-            </label>
-            <input
-              type="range"
-              id="darkness"
-              min="1"
-              max="15"
-              value={localConfig.darkness}
-              onChange={(e) => handleChange('darkness', parseInt(e.target.value))}
-            />
-            <div className="range-labels">
-              <span>Light (1)</span>
-              <span>Dark (15)</span>
-            </div>
-          </div>
+          {protocolFamily === 'M02' && (
+            <p className="protocol-family-note">
+              Darkness and speed aren&apos;t documented for the M02 printer family, so
+              labelync doesn&apos;t send those commands &mdash; the printer uses its own
+              defaults.
+            </p>
+          )}
 
-          <div className="form-group">
-            <label htmlFor="speed">
-              Speed: {localConfig.speed} (0x{localConfig.speed.toString(16).padStart(2, '0').toUpperCase()})
-            </label>
-            <input
-              type="range"
-              id="speed"
-              min="1"
-              max="5"
-              value={localConfig.speed}
-              onChange={(e) => handleChange('speed', parseInt(e.target.value))}
-            />
-            <div className="range-labels">
-              <span>Slow (1)</span>
-              <span>Fast (5)</span>
-            </div>
-          </div>
+          {protocolFamily === 'M110' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="darkness">
+                  Darkness: {localConfig.darkness} (0x{localConfig.darkness.toString(16).padStart(2, '0').toUpperCase()})
+                </label>
+                <input
+                  type="range"
+                  id="darkness"
+                  min="1"
+                  max="15"
+                  value={localConfig.darkness}
+                  onChange={(e) => handleChange('darkness', parseInt(e.target.value))}
+                />
+                <div className="range-labels">
+                  <span>Light (1)</span>
+                  <span>Dark (15)</span>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="speed">
+                  Speed: {localConfig.speed} (0x{localConfig.speed.toString(16).padStart(2, '0').toUpperCase()})
+                </label>
+                <input
+                  type="range"
+                  id="speed"
+                  min="1"
+                  max="5"
+                  value={localConfig.speed}
+                  onChange={(e) => handleChange('speed', parseInt(e.target.value))}
+                />
+                <div className="range-labels">
+                  <span>Slow (1)</span>
+                  <span>Fast (5)</span>
+                </div>
+              </div>
+            </>
+          )}
     </Modal>
   );
 };

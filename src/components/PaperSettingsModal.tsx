@@ -1,5 +1,6 @@
 import React from 'react';
 import type { PrinterConfig, Template } from '../types';
+import { getProtocolFamily, M02_FIXED_PAPER_WIDTH_MM } from '../types';
 import Modal from './Modal';
 import { getSvgAspectRatio } from '../utils/svgAspectRatio';
 import './PaperSettingsModal.css';
@@ -52,8 +53,15 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
     }));
   };
 
+  const protocolFamily = getProtocolFamily(config.deviceModel);
+  const isM02Family = protocolFamily === 'M02';
+  // The M02 family's print head is a fixed 48mm wide, so its paper width
+  // isn't user-editable — always use the fixed value regardless of what's
+  // stored in localConfig (e.g. left over from switching from another family).
+  const effectivePaperWidth = isM02Family ? M02_FIXED_PAPER_WIDTH_MM : localConfig.paperWidth;
+
   const handleSave = () => {
-    onSave(localConfig);
+    onSave({ ...localConfig, paperWidth: effectivePaperWidth });
     onClose();
   };
 
@@ -63,18 +71,18 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
   );
 
   const aspectRatioWarning = React.useMemo(() => {
-    if (!templateAspectRatio || !localConfig.paperWidth || !localConfig.paperHeight) return null;
+    if (!templateAspectRatio || !effectivePaperWidth || !localConfig.paperHeight) return null;
 
     const isLandscape = localConfig.orientation === 'landscape';
-    const displayWidth = isLandscape ? localConfig.paperHeight : localConfig.paperWidth;
-    const displayHeight = isLandscape ? localConfig.paperWidth : localConfig.paperHeight;
+    const displayWidth = isLandscape ? localConfig.paperHeight : effectivePaperWidth;
+    const displayHeight = isLandscape ? effectivePaperWidth : localConfig.paperHeight;
     const paperAspectRatio = displayWidth / displayHeight;
 
     const deviation = Math.abs(paperAspectRatio - templateAspectRatio) / templateAspectRatio;
     if (deviation <= ASPECT_RATIO_TOLERANCE) return null;
 
     return { paperAspectRatio, templateAspectRatio };
-  }, [templateAspectRatio, localConfig.paperWidth, localConfig.paperHeight, localConfig.orientation]);
+  }, [templateAspectRatio, effectivePaperWidth, localConfig.paperHeight, localConfig.orientation]);
 
   const paperTypeOptions = [
     { value: 0x0a, label: 'Label With Gaps' },
@@ -95,7 +103,8 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Paper Settings" footer={footer}>
-      <div className="form-group">
+      {!isM02Family && (
+        <div className="form-group">
             <label htmlFor="paperType">Paper Type:</label>
             <select
               id="paperType"
@@ -109,6 +118,13 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
               ))}
             </select>
           </div>
+      )}
+
+      {isM02Family && (
+        <p className="m02-media-type-note">
+          Media type settings aren&apos;t documented for the M02 printer family.
+        </p>
+      )}
 
           <div className="form-group">
             <label>Orientation:</label>
@@ -140,11 +156,17 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
               <input
                 type="number"
                 id="paperWidth"
-                value={localConfig.paperWidth}
+                value={effectivePaperWidth}
                 onChange={(e) => handleChange('paperWidth', parseInt(e.target.value))}
                 min="10"
                 max="100"
+                disabled={isM02Family}
               />
+              {isM02Family && (
+                <small className="m02-media-type-note">
+                  Fixed at {M02_FIXED_PAPER_WIDTH_MM}mm for this printer family.
+                </small>
+              )}
             </div>
 
             <div className="form-group">

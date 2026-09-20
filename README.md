@@ -19,10 +19,16 @@ Simply visit <https://pkg.mitchelloharawild.com/labelync> to start using the app
 * ✅ **Phomemo M110**
 * ❓ **Phomemo M120** (untested)
 * ❓ **Phomemo M220** (untested)
+* 🧪 **Phomemo M02** (experimental, untested on real hardware)
+* 🧪 **Phomemo M02 Pro** (experimental, untested on real hardware)
+* 🧪 **Phomemo M02S** (experimental, untested on real hardware)
+* 🧪 **Phomemo T02** (experimental, untested on real hardware)
 
-I personally own and use a Phomemo M110, and I have not been able to test other devices. All other implementations are based on the fantastic [vivier/phomemo-tools](https://github.com/vivier/phomemo-tools) project. 
+I personally own and use a Phomemo M110, and I have not been able to test other devices. All other implementations are based on the fantastic [vivier/phomemo-tools](https://github.com/vivier/phomemo-tools) project.
 
-**Have a different Phomemo printer?** Please create an issue reporting if this web app works for you (or doesn't)!
+The M02/M02 Pro/M02S/T02 family speaks a different (plain ESC/POS) protocol than the M110/M120/M220 family. That protocol path is implemented from the reverse-engineered docs only — I don't own one of these printers, so it's **best-effort and unverified against real hardware**. In particular, darkness and print-speed controls aren't documented for this family, so labelync doesn't expose or send them for these models; the paper width is also fixed at 48mm rather than user-configurable.
+
+**Have a different Phomemo printer?** Please create an issue reporting if this web app works for you (or doesn't) — this is especially appreciated for the M02 family, since it would let me move it out of "experimental" status.
 
 ## ✨ Features
 
