@@ -160,7 +160,7 @@ body {
   margin: 0 0 6px 0;
   font-size: 0.85rem;
   line-height: 1.4;
-  color: #ddd;
+  color: var(--color-text-muted);
 }
 
 .browser-warning p:last-child {
@@ -245,7 +245,7 @@ body {
 .guide-section p {
   margin: 0 0 8px 0;
   line-height: 1.5;
-  color: #ddd;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
@@ -262,7 +262,7 @@ body {
 .guide-section li {
   margin-bottom: 5px;
   line-height: 1.5;
-  color: #ddd;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
@@ -296,7 +296,7 @@ body {
 }
 
 .version-text {
-  color: #8892a0;
+  color: var(--color-text-muted);
   font-size: 0.85rem;
   font-weight: 500;
 }

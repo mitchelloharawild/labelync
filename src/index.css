@@ -1,4 +1,8 @@
 :root {
+  /* Dark palette. This is the default/fallback — used when the "dark" theme
+     is explicitly selected, and also when no explicit theme has been chosen
+     (data-theme is unset) and the OS has no light preference (or doesn't
+     support prefers-color-scheme at all). */
   --color-bg: #1f2630;
   --color-surface: #2a3240;
   --color-surface-2: #3a4350;
@@ -14,6 +18,51 @@
   --color-text-muted: #9aa5b4;
   --color-border: #3a4350;
   --color-field-bg: #1c222c;
+  color-scheme: dark;
+}
+
+/* Light palette, explicit override — applied when the user picks "light". */
+:root[data-theme='light'] {
+  --color-bg: #f4f5f7;
+  --color-surface: #ffffff;
+  --color-surface-2: #eceef1;
+  --color-surface-2-hover: #e1e4e9;
+  --color-rail: #eef0f3;
+  --color-accent: #0f9d90;
+  --color-accent-hover: #0c8074;
+  --color-accent-text: #ffffff;
+  --color-danger: #d32f2f;
+  --color-danger-hover: #b71c1c;
+  --color-amber: #b3720d;
+  --color-text: #1b222c;
+  --color-text-muted: #5b6472;
+  --color-border: #d8dce2;
+  --color-field-bg: #f4f5f7;
+  color-scheme: light;
+}
+
+/* Light palette, "system" theme — applied when no explicit theme has been
+   chosen (data-theme unset) and the OS prefers light. Kept in sync with the
+   explicit override above. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --color-bg: #f4f5f7;
+    --color-surface: #ffffff;
+    --color-surface-2: #eceef1;
+    --color-surface-2-hover: #e1e4e9;
+    --color-rail: #eef0f3;
+    --color-accent: #0f9d90;
+    --color-accent-hover: #0c8074;
+    --color-accent-text: #ffffff;
+    --color-danger: #d32f2f;
+    --color-danger-hover: #b71c1c;
+    --color-amber: #b3720d;
+    --color-text: #1b222c;
+    --color-text-muted: #5b6472;
+    --color-border: #d8dce2;
+    --color-field-bg: #f4f5f7;
+    color-scheme: light;
+  }
 }
 
 * {

@@ -8,7 +8,7 @@
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #fff;
+  color: var(--color-text);
 }
 
 .form-group input[type="range"] {
@@ -20,11 +20,11 @@
 .form-group select {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #3a4350;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   font-size: 14px;
-  background-color: #1f2630;
-  color: #fff;
+  background-color: var(--color-field-bg);
+  color: var(--color-text);
 
   cursor: pointer;
 }
@@ -39,7 +39,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: #8892a0;
+  color: var(--color-text-muted);
 }
 
 .button {
@@ -53,19 +53,19 @@
 }
 
 .button-primary {
-  background-color: #31d4c4;
-  color: #1f2630;
+  background-color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
 .button-primary:hover {
-  background-color: #28b9ab;
+  background-color: var(--color-accent-hover);
 }
 
 .button-secondary {
-  background-color: #3a4350;
-  color: white;
+  background-color: var(--color-surface-2);
+  color: var(--color-text);
 }
 
 .button-secondary:hover {
-  background-color: #4a5360;
+  background-color: var(--color-surface-2-hover);
 }

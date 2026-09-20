@@ -1,3 +1,6 @@
+// Theme preference: 'system' follows the OS prefers-color-scheme setting
+export type Theme = 'system' | 'light' | 'dark';
+
 export interface FormData {
   qrText: string;
   centeredText: string;

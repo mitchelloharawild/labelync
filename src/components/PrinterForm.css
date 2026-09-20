@@ -7,7 +7,7 @@
   display: block;
   margin-bottom: 8px;
   font-weight: bold;
-  color: #fff;
+  color: var(--color-text);
 }
 
 .printer-form input,
@@ -16,10 +16,10 @@
   width: 100%;
   padding: 8px;
   margin-bottom: 12px;
-  border: 1px solid #3a4350;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  background-color: #1f2630;
-  color: white;
+  background-color: var(--color-field-bg);
+  color: var(--color-text);
   box-sizing: border-box;
   font-family: inherit;
 }
@@ -65,14 +65,14 @@
   border-radius: 4px;
   margin-bottom: 16px;
   font-size: 14px;
-  color: #fff;
+  color: var(--color-text);
   border: 1px solid rgba(49, 212, 196, 0.3);
 }
 
 .no-template-message {
   text-align: center;
   padding: 40px 20px;
-  color: #8892a0;
+  color: var(--color-text-muted);
 }
 
 .no-template-message p:first-child {
@@ -99,7 +99,7 @@
 .field-toggle-btn {
   background: none;
   border: none;
-  color: #8892a0;
+  color: var(--color-text-muted);
   cursor: pointer;
   padding: 4px 8px;
   font-size: 16px;
@@ -109,7 +109,7 @@
 }
 
 .field-toggle-btn:hover {
-  color: #31d4c4;
+  color: var(--color-accent);
 }
 
 .field-toggle-btn.hidden {
@@ -123,7 +123,7 @@
 .field-hint {
   display: block;
   font-size: 12px;
-  color: #aaa;
+  color: var(--color-text-muted);
   margin-top: -8px;
   margin-bottom: 8px;
   font-style: italic;

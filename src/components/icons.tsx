@@ -57,6 +57,20 @@ export const IconSun = ({ size = 16 }: IconProps) => (
   </svg>
 );
 
+export const IconMoon = ({ size = 16 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" {...base}>
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+);
+
+export const IconMonitor = ({ size = 16 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" {...base}>
+    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+    <line x1="8" y1="21" x2="16" y2="21" />
+    <line x1="12" y1="17" x2="12" y2="21" />
+  </svg>
+);
+
 export const IconPrinter = ({ size = 16 }: IconProps) => (
   <svg width={size} height={size} viewBox="0 0 24 24" {...base}>
     <polyline points="6 9 6 2 18 2 18 9" />

@@ -12,9 +12,16 @@ import { usePrinter } from './hooks/usePrinter';
 import { getDefaultConfig, loadPrinterConfig, savePrinterConfig } from './utils/printerStorage';
 import { getTemplate, getDefaultTemplate } from './utils/templateStorage';
 import { getFreshTextFieldValues } from './utils/svgTextUtils';
+import { loadTheme, saveTheme } from './utils/themeStorage';
 
-import type { Template, PrinterConfig } from './types';
+import type { Template, PrinterConfig, Theme } from './types';
 import './App.css';
+
+// Surface color to sync into the theme-color meta tag for each resolved theme
+const THEME_COLOR: Record<'light' | 'dark', string> = {
+  dark: '#2a3240',
+  light: '#ffffff',
+};
 
 // @ts-ignore - Import version from package.json
 import { version as APP_VERSION } from '../package.json';
@@ -39,7 +46,39 @@ function App() {
   const [copies, setCopies] = useState(1);
   const [isPrinting, setIsPrinting] = useState(false);
 
+  const [theme, setTheme] = useState<Theme>(loadTheme);
+
   const { isConnected, deviceId, reconnectablePort, connect, reconnect, disconnect, printImage } = usePrinter();
+
+  // Apply the selected theme to the document and keep the PWA theme-color
+  // meta tag in sync, including when "system" tracks OS preference changes.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'system') {
+      root.removeAttribute('data-theme');
+    } else {
+      root.setAttribute('data-theme', theme);
+    }
+    saveTheme(theme);
+
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    const applyMetaThemeColor = () => {
+      const isDark = theme === 'dark' || (theme === 'system' && mql.matches);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      meta?.setAttribute('content', isDark ? THEME_COLOR.dark : THEME_COLOR.light);
+    };
+
+    applyMetaThemeColor();
+
+    if (theme === 'system') {
+      mql.addEventListener('change', applyMetaThemeColor);
+      return () => mql.removeEventListener('change', applyMetaThemeColor);
+    }
+  }, [theme]);
+
+  const handleCycleTheme = () => {
+    setTheme(prev => (prev === 'system' ? 'light' : prev === 'light' ? 'dark' : 'system'));
+  };
 
   // Check if browser supports Web Serial API
   const isSerialSupported = 'serial' in navigator;
@@ -293,8 +332,10 @@ function App() {
       <TopBar
         isConnected={isConnected}
         deviceLabel={`Phomemo ${printerConfig.deviceModel}`}
+        theme={theme}
         onDisconnect={handleDisconnect}
         onOpenSetup={() => setIsSetupModalOpen(true)}
+        onCycleTheme={handleCycleTheme}
       />
 
       {!isConnected ? (
@@ -370,9 +411,11 @@ function App() {
       ) : (
         <div className="app-body">
           <Toolbar
+            theme={theme}
             onOpenPaperSettings={() => setIsPaperSettingsModalOpen(true)}
             onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
             onOpenSetup={() => setIsSetupModalOpen(true)}
+            onCycleTheme={handleCycleTheme}
           />
 
           <div className="content-split">
