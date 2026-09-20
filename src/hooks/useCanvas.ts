@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { Template, PrinterConfig } from '../types';
 import { updateSVGTextFields } from '../utils/svgTextUtils';
+import { getSvgAspectRatio } from '../utils/svgAspectRatio';
 
 const mmToPx = (mm: number): number => mm * 203 / 25.4;
 
@@ -79,8 +80,23 @@ const drawSVGTemplate = async (
   const url = URL.createObjectURL(blob);
 
   img.onload = () => {
-    // Draw SVG to fill the canvas
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    // Fit the template into the canvas preserving its aspect ratio (letterbox)
+    // instead of stretching it to fill, which would distort the label if the
+    // template's viewBox ratio doesn't match the configured paper size.
+    const templateRatio = getSvgAspectRatio(template.svgContent) ?? (img.naturalWidth / img.naturalHeight);
+    const canvasRatio = canvas.width / canvas.height;
+
+    let drawWidth = canvas.width;
+    let drawHeight = canvas.height;
+    if (templateRatio > canvasRatio) {
+      drawHeight = canvas.width / templateRatio;
+    } else if (templateRatio < canvasRatio) {
+      drawWidth = canvas.height * templateRatio;
+    }
+    const offsetX = (canvas.width - drawWidth) / 2;
+    const offsetY = (canvas.height - drawHeight) / 2;
+
+    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     URL.revokeObjectURL(url);
 
     // Apply dithering to convert to black and white

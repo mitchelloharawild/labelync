@@ -419,6 +419,7 @@ function App() {
         onClose={() => setIsPaperSettingsModalOpen(false)}
         config={printerConfig}
         onSave={handleSavePaperSettings}
+        template={currentTemplate}
       />
 
       <TemplateModal

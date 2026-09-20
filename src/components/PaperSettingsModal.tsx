@@ -1,6 +1,7 @@
 import React from 'react';
-import type { PrinterConfig } from '../types';
+import type { PrinterConfig, Template } from '../types';
 import Modal from './Modal';
+import { getSvgAspectRatio } from '../utils/svgAspectRatio';
 import './PaperSettingsModal.css';
 
 interface PaperSettingsModalProps {
@@ -8,13 +9,18 @@ interface PaperSettingsModalProps {
   onClose: () => void;
   config: PrinterConfig;
   onSave: (config: Partial<PrinterConfig>) => void;
+  template?: Template;
 }
+
+// How far the paper's aspect ratio may deviate from the template's before we warn.
+const ASPECT_RATIO_TOLERANCE = 0.03;
 
 const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
   isOpen,
   onClose,
   config,
-  onSave
+  onSave,
+  template
 }) => {
   const [localConfig, setLocalConfig] = React.useState({
     paperType: config.paperType,
@@ -50,6 +56,25 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
     onSave(localConfig);
     onClose();
   };
+
+  const templateAspectRatio = React.useMemo(
+    () => (template ? getSvgAspectRatio(template.svgContent) : null),
+    [template]
+  );
+
+  const aspectRatioWarning = React.useMemo(() => {
+    if (!templateAspectRatio || !localConfig.paperWidth || !localConfig.paperHeight) return null;
+
+    const isLandscape = localConfig.orientation === 'landscape';
+    const displayWidth = isLandscape ? localConfig.paperHeight : localConfig.paperWidth;
+    const displayHeight = isLandscape ? localConfig.paperWidth : localConfig.paperHeight;
+    const paperAspectRatio = displayWidth / displayHeight;
+
+    const deviation = Math.abs(paperAspectRatio - templateAspectRatio) / templateAspectRatio;
+    if (deviation <= ASPECT_RATIO_TOLERANCE) return null;
+
+    return { paperAspectRatio, templateAspectRatio };
+  }, [templateAspectRatio, localConfig.paperWidth, localConfig.paperHeight, localConfig.orientation]);
 
   const paperTypeOptions = [
     { value: 0x0a, label: 'Label With Gaps' },
@@ -134,6 +159,15 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
               />
             </div>
       </div>
+
+      {aspectRatioWarning && (
+        <div className="aspect-ratio-warning">
+          Paper size ({aspectRatioWarning.paperAspectRatio.toFixed(2)}:1) doesn't match the
+          current template's shape ({aspectRatioWarning.templateAspectRatio.toFixed(2)}:1).
+          The preview and print will be letterboxed to avoid stretching &mdash; adjust the
+          paper dimensions above to match the template.
+        </div>
+      )}
     </Modal>
   );
 };
