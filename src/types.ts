@@ -1,3 +1,7 @@
+import type { DeviceModel } from 'phomemo-protocol';
+export type { ProtocolFamily } from 'phomemo-protocol';
+export { getProtocolFamily, M02_FIXED_PAPER_WIDTH_MM } from 'phomemo-protocol';
+
 // Theme preference: 'system' follows the OS prefers-color-scheme setting
 export type Theme = 'system' | 'light' | 'dark';
 
@@ -48,7 +52,7 @@ export interface Template {
 }
 
 export interface PrinterConfig {
-  deviceModel: 'M110' | 'M120' | 'M220' | 'M02' | 'M02Pro' | 'M02S' | 'T02';
+  deviceModel: DeviceModel;
   darkness: number; // 0x01 - 0x0f (M110 family only; ignored for M02 family)
   speed: number; // 0x01 - 0x05 (M110 family only; ignored for M02 family)
   paperType: number; // 0x0a="Label With Gaps" 0x0b="Continuous" 0x26="Label With Marks" (M110 family only; ignored for M02 family)
@@ -59,29 +63,3 @@ export interface PrinterConfig {
   svgTextFields?: Record<string, string>; // text field IDs and their values
   lastUsedTemplateId?: string; // ID of the last used template
 }
-
-// The two supported Phomemo printer families speak different wire protocols
-// (see src/hooks/usePrinter.ts):
-// - 'M110': ESC N speed/darkness + 0x1f 0x11 media type header, 0x1f 0xf0 footer.
-//   Covers the M110/M120/M220 models.
-// - 'M02': plain ESC/POS (ESC @ / ESC a / 0x1f 0x11 0x02 0x04 header, ESC d feed +
-//   0x1f 0x11 status-query footer). Covers the M02/M02 Pro/M02S/T02 models.
-//   Experimental/untested on real hardware — see README.
-export type ProtocolFamily = 'M110' | 'M02';
-
-const DEVICE_PROTOCOL_FAMILY: Record<PrinterConfig['deviceModel'], ProtocolFamily> = {
-  M110: 'M110',
-  M120: 'M110',
-  M220: 'M110',
-  M02: 'M02',
-  M02Pro: 'M02',
-  M02S: 'M02',
-  T02: 'M02'
-};
-
-export const getProtocolFamily = (deviceModel: PrinterConfig['deviceModel']): ProtocolFamily =>
-  DEVICE_PROTOCOL_FAMILY[deviceModel];
-
-// The M02 family's print head is a fixed 384 dots / 48 bytes per line (48mm),
-// unlike the M110 family where the printable width is derived from paperWidth.
-export const M02_FIXED_PAPER_WIDTH_MM = 48;

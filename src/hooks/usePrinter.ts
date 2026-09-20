@@ -1,14 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { PrinterConfig } from '../types';
-import { getProtocolFamily } from '../types';
-import { getDeviceId, loadPrinterConfig } from '../utils/printerStorage';
-
-// M02-family hardware caps a single raster block at 255 lines; taller images
-// must be sent as multiple chained GS v 0 block markers (per the reverse-
-// engineered protocol docs in vivier/phomemo-tools). The M110 family's 16-bit
-// block-height field comfortably covers realistic label heights in one block,
-// so it keeps sending a single block marker as before.
-const M02_MAX_BLOCK_LINES = 255;
+import { rasterizeMonochrome, buildPrintCommands } from 'phomemo-protocol';
+import { openPhomemoSerialPort, getSerialDeviceId, writePrintCommands } from 'phomemo-protocol/serial';
+import { loadPrinterConfig } from '../utils/printerStorage';
 
 export interface KnownPort {
   port: SerialPort;
@@ -44,7 +38,7 @@ export const usePrinter = (): UsePrinterReturn => {
       try {
         const ports = await navigator.serial.getPorts();
         for (const port of ports) {
-          const id = getDeviceId(port);
+          const id = getSerialDeviceId(port);
           const savedConfig = loadPrinterConfig(id);
           if (savedConfig) {
             if (!cancelled) {
@@ -73,11 +67,11 @@ export const usePrinter = (): UsePrinterReturn => {
 
     // Race between opening the port and the timeout
     await Promise.race([
-      port.open({ baudRate: 128000 }),
+      openPhomemoSerialPort(port),
       timeoutPromise
     ]);
 
-    const id = getDeviceId(port);
+    const id = getSerialDeviceId(port);
 
     setSerialPort(port);
     setIsConnected(true);
@@ -167,106 +161,16 @@ export const usePrinter = (): UsePrinterReturn => {
       throw new Error('Could not get canvas context');
     }
     const imageData = ctx.getImageData(0, 0, printCanvas.width, printCanvas.height);
-
-    const arrayWidth = Math.ceil(imageData.width / 8);
-    const arrayHeight = imageData.height;
-    const array = new Uint8Array(arrayWidth * arrayHeight);
-    array.fill(0x00);
-
-    for (let y = 0; y < imageData.height; ++y) {
-      for (let x = 0; x < imageData.width; ++x) {
-        const imageDataIndex = (y * imageData.width + x) * 4;
-        const r = imageData.data[imageDataIndex];
-        const g = imageData.data[imageDataIndex + 1];
-        const b = imageData.data[imageDataIndex + 2];
-
-        if (r < 0x80 && g < 0x80 && b < 0x80) {
-          const byteIndex = Math.floor(x / 8);
-          const bitIndex = x % 8;
-          array[y * arrayWidth + byteIndex] |= (0x80 >> bitIndex);
-        }
-      }
-    }
-
-    const protocolFamily = getProtocolFamily(config.deviceModel);
+    const bitmap = rasterizeMonochrome(imageData);
+    const commands = buildPrintCommands(bitmap, {
+      deviceModel: config.deviceModel,
+      darkness: config.darkness,
+      speed: config.speed,
+      paperType: config.paperType
+    });
 
     try {
-      if (!serialPort.writable) {
-        throw new Error('Serial port is not writable');
-      }
-      const writer = serialPort.writable.getWriter();
-
-      if (protocolFamily === 'M02') {
-        // Plain ESC/POS: ESC @ (init) + ESC a (justification, left) +
-        // 0x1f 0x11 0x02 0x04. No documented darkness/speed/media-type
-        // commands for this family, so config.darkness/speed/paperType are
-        // intentionally not sent.
-        const HEADER = new Uint8Array([
-          0x1b, 0x40,
-          0x1b, 0x61, 0x00,
-          0x1f, 0x11, 0x02, 0x04
-        ]);
-
-        // ESC d (feed n lines) x2 + 0x1f 0x11 status queries.
-        const FOOTER = new Uint8Array([
-          0x1b, 0x64, 0x02,
-          0x1b, 0x64, 0x02,
-          0x1f, 0x11, 0x08,
-          0x1f, 0x11, 0x0e,
-          0x1f, 0x11, 0x07,
-          0x1f, 0x11, 0x09
-        ]);
-
-        await writer.write(HEADER);
-
-        // M02 hardware only accepts up to 255 lines per GS v 0 block, so tall
-        // images are split into multiple chained block markers.
-        for (let lineOffset = 0; lineOffset < arrayHeight; lineOffset += M02_MAX_BLOCK_LINES) {
-          const chunkHeight = Math.min(M02_MAX_BLOCK_LINES, arrayHeight - lineOffset);
-          const blockMarker = new Uint8Array([
-            0x1d, 0x76, 0x30, 0x00,
-            arrayWidth & 0xff,
-            arrayWidth >> 8,
-            chunkHeight & 0xff,
-            chunkHeight >> 8
-          ]);
-          const chunkData = array.subarray(
-            lineOffset * arrayWidth,
-            (lineOffset + chunkHeight) * arrayWidth
-          );
-
-          await writer.write(blockMarker);
-          await writer.write(chunkData);
-        }
-
-        await writer.write(FOOTER);
-      } else {
-        const HEADER = new Uint8Array([
-          0x1b, 0x4e, 0x0d, config.speed,
-          0x1b, 0x4e, 0x04, config.darkness,
-          0x1f, 0x11, config.paperType
-        ]);
-
-        const BLOCK_MARKER = new Uint8Array([
-          0x1d, 0x76, 0x30, 0x00,
-          arrayWidth & 0xff,
-          arrayWidth >> 8,
-          arrayHeight & 0xff,
-          arrayHeight >> 8
-        ]);
-
-        const FOOTER = new Uint8Array([
-          0x1f, 0xf0, 0x05, 0x00,
-          0x1f, 0xf0, 0x03, 0x00
-        ]);
-
-        await writer.write(HEADER);
-        await writer.write(BLOCK_MARKER);
-        await writer.write(array);
-        await writer.write(FOOTER);
-      }
-
-      await writer.close();
+      await writePrintCommands(serialPort, commands);
     } catch (e) {
       console.error('Print error:', e);
       throw e instanceof Error ? e : new Error('Print failed');

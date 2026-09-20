@@ -72,6 +72,15 @@ The M02/M02 Pro/M02S/T02 family speaks a different (plain ESC/POS) protocol than
 
 # 💻 Development
 
+## Architecture
+
+The Phomemo wire protocol (image → printer bytes) and the Web Serial
+transport live in a separate package,
+[phomemo-protocol](https://github.com/mitchelloharawild/phomemo-protocol)
+([npm](https://www.npmjs.com/package/phomemo-protocol)), so they can be
+reused outside this app. Labelync itself only handles the UI, SVG template
+rendering, and local settings storage.
+
 ## Installation
 
 ```bash
@@ -107,4 +116,5 @@ MIT
 ## 🙏 Acknowledgments
 
 - [vivier/phomemo-tools](https://github.com/vivier/phomemo-tools) - Reference implementation for Phomemo printer protocols
+- [phomemo-protocol](https://github.com/mitchelloharawild/phomemo-protocol) - This app's Phomemo protocol encoder and Web Serial transport, extracted as a standalone library
 - [Web Serial API](https://developer.chrome.com/articles/serial/) - Browser API documentation

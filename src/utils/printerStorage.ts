@@ -3,13 +3,6 @@ import { getProtocolFamily, M02_FIXED_PAPER_WIDTH_MM } from '../types';
 
 const STORAGE_KEY_PREFIX = 'printer_config_';
 
-export const getDeviceId = (port: SerialPort): string => {
-  const info = port.getInfo();
-  // Create a unique ID from USB vendor and product IDs
-  // If available, this will be consistent for the same physical device
-  return `${info.usbVendorId}_${info.usbProductId}`;
-};
-
 export const savePrinterConfig = (deviceId: string, config: PrinterConfig): void => {
   try {
     const key = `${STORAGE_KEY_PREFIX}${deviceId}`;
