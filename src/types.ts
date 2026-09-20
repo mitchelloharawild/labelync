@@ -14,7 +14,8 @@ export enum FieldType {
   TEXT = 'text',
   DATE = 'date',
   QR = 'qr',
-  IMAGE = 'image'
+  IMAGE = 'image',
+  BARCODE = 'barcode'
 }
 
 // Metadata for a field in an SVG template
@@ -31,6 +32,8 @@ export interface FieldMetadata {
   // Image specific options
   imageWidth?: number;
   imageHeight?: number;
+  // Barcode specific options
+  barcodeSymbology?: string; // Barcode symbology (e.g. 'CODE128'), defaults to 'CODE128'
 }
 
 export interface Template {

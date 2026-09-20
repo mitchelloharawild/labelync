@@ -1,10 +1,11 @@
 // SVG utilities for handling text elements and special field types
 
 import { FieldType, FieldMetadata } from '../types';
-import { 
-  updateQRCodeElement, 
-  updateDateElement, 
-  updateImageElement 
+import {
+  updateQRCodeElement,
+  updateDateElement,
+  updateImageElement,
+  updateBarcodeElement
 } from './fieldRenderers';
 
 export interface TextFieldInfo {
@@ -27,6 +28,8 @@ export const extractFieldMetadata = (element: Element): FieldMetadata => {
     type = FieldType.QR;
   } else if (typeAttr === 'image') {
     type = FieldType.IMAGE;
+  } else if (typeAttr === 'barcode') {
+    type = FieldType.BARCODE;
   } else {
     type = FieldType.TEXT;
   }
@@ -55,7 +58,11 @@ export const extractFieldMetadata = (element: Element): FieldMetadata => {
     if (width) metadata.imageWidth = parseInt(width, 10);
     if (height) metadata.imageHeight = parseInt(height, 10);
   }
-  
+
+  if (type === FieldType.BARCODE) {
+    metadata.barcodeSymbology = element.getAttribute('data-barcode-symbology') || 'CODE128';
+  }
+
   return metadata;
 };
 
@@ -83,6 +90,8 @@ export const extractTextFieldIds = (svgContent: string): TextFieldInfo => {
       } else if (fieldMetadata.type === FieldType.QR) {
         defaults[id] = '';
       } else if (fieldMetadata.type === FieldType.IMAGE) {
+        defaults[id] = '';
+      } else if (fieldMetadata.type === FieldType.BARCODE) {
         defaults[id] = '';
       } else {
         const tspans = el.querySelectorAll('tspan');
@@ -154,6 +163,9 @@ export const updateSVGTextFields = async (
         value = formattedDate;
       } else if (metadata.type === FieldType.IMAGE) {
         updateImageElement(svgDoc, id, value, metadata);
+        return;
+      } else if (metadata.type === FieldType.BARCODE) {
+        updateBarcodeElement(svgDoc, id, value, metadata);
         return;
       }
     }

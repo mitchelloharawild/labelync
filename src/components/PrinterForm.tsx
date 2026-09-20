@@ -119,6 +119,39 @@ const PrinterForm = ({
       );
     }
 
+    if (metadata?.type === 'barcode') {
+      return (
+        <div key={fieldId} className="form-field">
+          <div className="form-field-header">
+            <label htmlFor={fieldId}>{label}:</label>
+            {isOptional && (
+              <button
+                type="button"
+                className={`field-toggle-btn ${isHidden ? 'hidden' : ''}`}
+                onClick={() => toggleFieldVisibility(fieldId)}
+                title={isHidden ? 'Show in canvas' : 'Hide from canvas'}
+              >
+                {isHidden ? '👁️‍🗨️' : '👁️'}
+              </button>
+            )}
+          </div>
+          <div className="field-input-container">
+            <input
+              type="text"
+              id={fieldId}
+              name={fieldId}
+              value={value}
+              onChange={(e) => handleChange(fieldId, e.target.value)}
+              placeholder={`Enter ${label} (will be encoded as barcode)`}
+            />
+            <small className="field-hint">
+              📊 Barcode • Symbology: {metadata.barcodeSymbology || 'CODE128'}
+            </small>
+          </div>
+        </div>
+      );
+    }
+
     if (metadata?.type === 'image') {
       return (
         <div key={fieldId} className="form-field">

@@ -146,6 +146,28 @@ QR codes are automatically generated based on the form text.
 > - `Q`: Good (25% recovery)
 > - `H`: Best (30% recovery) - use if code might be damaged
 
+## Adding a Barcode
+
+Linear barcodes are automatically generated based on the form text.
+
+```xml
+<rect 
+  id="product_barcode" 
+  x="50" 
+  y="180" 
+  width="280" 
+  height="60"
+  data-field-type="barcode"
+  data-label="Product SKU"
+  data-barcode-symbology="CODE128"/>
+```
+
+**Important:** Use a `<rect>` element as a placeholder. It will be replaced with the barcode image, stretched to fill the placeholder's width and height.
+
+> [!TIP]
+> **Symbology options:**
+> - `CODE128` (default) - supports the full ASCII character set, recommended for most use cases
+
 ## Adding an Image Upload Field
 
 Image fields allow image files to be uploaded, which are converted to grayscale with dithering.

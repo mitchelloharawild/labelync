@@ -1,6 +1,7 @@
-// Utilities for rendering special field types (QR codes, dates, images)
+// Utilities for rendering special field types (QR codes, dates, images, barcodes)
 
 import QRCode from 'qrcode';
+import JsBarcode from 'jsbarcode';
 import { FieldMetadata } from '../types';
 
 /**
@@ -102,6 +103,77 @@ export const updateQRCodeElement = async (
     image.setAttribute('height', height.toString());
     image.setAttribute('href', qrDataUrl);
     
+    // Add to SVG
+    const svgElement = svgDoc.querySelector('svg');
+    if (svgElement) {
+      svgElement.appendChild(image);
+    }
+  }
+};
+
+/**
+ * Generate a linear barcode as a data URL (PNG)
+ */
+export const generateBarcodeDataUrl = (
+  text: string,
+  options: {
+    symbology?: string;
+  } = {}
+): string => {
+  if (!text) return '';
+
+  try {
+    const canvas = document.createElement('canvas');
+    JsBarcode(canvas, text, {
+      format: options.symbology || 'CODE128',
+      displayValue: false,
+      margin: 0,
+    });
+
+    return canvas.toDataURL('image/png');
+  } catch (error) {
+    console.error('Error generating barcode:', error);
+    return '';
+  }
+};
+
+/**
+ * Update a rect element to display a linear barcode
+ */
+export const updateBarcodeElement = (
+  svgDoc: Document,
+  fieldId: string,
+  value: string,
+  metadata: FieldMetadata
+): void => {
+  const element = svgDoc.getElementById(fieldId);
+  if (!element) return;
+
+  // Get rect dimensions and position
+  const x = parseFloat(element.getAttribute('x') || '0');
+  const y = parseFloat(element.getAttribute('y') || '0');
+  const width = parseFloat(element.getAttribute('width') || '100');
+  const height = parseFloat(element.getAttribute('height') || '100');
+
+  // Remove the rect element
+  element.remove();
+
+  // Generate barcode
+  const barcodeDataUrl = generateBarcodeDataUrl(value, {
+    symbology: metadata.barcodeSymbology,
+  });
+
+  if (barcodeDataUrl) {
+    // Create an image element with the barcode
+    const image = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'image');
+    image.setAttribute('id', fieldId);
+    image.setAttribute('x', x.toString());
+    image.setAttribute('y', y.toString());
+    image.setAttribute('width', width.toString());
+    image.setAttribute('height', height.toString());
+    image.setAttribute('href', barcodeDataUrl);
+    image.setAttribute('preserveAspectRatio', 'none');
+
     // Add to SVG
     const svgElement = svgDoc.querySelector('svg');
     if (svgElement) {
