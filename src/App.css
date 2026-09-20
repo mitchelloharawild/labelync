@@ -134,6 +134,16 @@ body {
   cursor: not-allowed;
 }
 
+.reconnect-button {
+  margin-bottom: 10px;
+  background-color: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.reconnect-button:hover:not(:disabled) {
+  background-color: var(--color-surface-2-hover);
+}
+
 /* Browser Warning Styles */
 .browser-warning {
   width: 100%;

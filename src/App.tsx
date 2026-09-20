@@ -33,12 +33,13 @@ function App() {
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
 
   const [copies, setCopies] = useState(1);
   const [isPrinting, setIsPrinting] = useState(false);
 
-  const { isConnected, deviceId, connect, disconnect, printImage } = usePrinter();
+  const { isConnected, deviceId, reconnectablePort, connect, reconnect, disconnect, printImage } = usePrinter();
 
   // Check if browser supports Web Serial API
   const isSerialSupported = 'serial' in navigator;
@@ -97,6 +98,25 @@ function App() {
 
   const handleDisconnect = async () => {
     await disconnect();
+  };
+
+  const handleReconnect = async () => {
+    setIsReconnecting(true);
+    try {
+      const success = await reconnect();
+      if (!success) {
+        setNotification({ message: 'Failed to reconnect to printer. Please connect manually.', type: 'error' });
+        setTimeout(() => setNotification(null), 5000);
+      }
+    } catch (error) {
+      setNotification({
+        message: 'Reconnect failed: ' + (error instanceof Error ? error.message : 'Unknown error') + '. Please connect manually.',
+        type: 'error'
+      });
+      setTimeout(() => setNotification(null), 5000);
+    } finally {
+      setIsReconnecting(false);
+    }
   };
 
   const handlePrint = async () => {
@@ -288,10 +308,20 @@ function App() {
               </div>
             )}
 
+            {reconnectablePort && (
+              <button
+                className="connect-button reconnect-button"
+                onClick={handleReconnect}
+                disabled={!isSerialSupported || isConnecting || isReconnecting}
+              >
+                {isReconnecting ? 'Reconnecting...' : `Reconnect to Phomemo ${reconnectablePort.deviceModel}`}
+              </button>
+            )}
+
             <button
               className="connect-button"
               onClick={handleConnect}
-              disabled={!isSerialSupported || isConnecting}
+              disabled={!isSerialSupported || isConnecting || isReconnecting}
             >
               {isConnecting ? 'Connecting...' : 'Connect printer'}
             </button>

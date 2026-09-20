@@ -1,11 +1,19 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { PrinterConfig } from '../types';
-import { getDeviceId } from '../utils/printerStorage';
+import { getDeviceId, loadPrinterConfig } from '../utils/printerStorage';
+
+export interface KnownPort {
+  port: SerialPort;
+  deviceId: string;
+  deviceModel: PrinterConfig['deviceModel'];
+}
 
 interface UsePrinterReturn {
   isConnected: boolean;
   deviceId: string | null;
+  reconnectablePort: KnownPort | null;
   connect: () => Promise<boolean>;
+  reconnect: () => Promise<boolean>;
   disconnect: () => Promise<void>;
   printImage: (canvas: HTMLCanvasElement, config: PrinterConfig) => Promise<void>;
 }
@@ -14,6 +22,61 @@ export const usePrinter = (): UsePrinterReturn => {
   const [serialPort, setSerialPort] = useState<SerialPort | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [reconnectablePort, setReconnectablePort] = useState<KnownPort | null>(null);
+
+  // On mount, check for already-authorized ports (granted in a previous session)
+  // that match a previously-saved printer config, so we can offer a one-click
+  // reconnect instead of re-prompting the OS device picker.
+  useEffect(() => {
+    if (!('serial' in navigator)) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const ports = await navigator.serial.getPorts();
+        for (const port of ports) {
+          const id = getDeviceId(port);
+          const savedConfig = loadPrinterConfig(id);
+          if (savedConfig) {
+            if (!cancelled) {
+              setReconnectablePort({ port, deviceId: id, deviceModel: savedConfig.deviceModel });
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to enumerate authorized serial ports:', e);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Shared logic for opening a SerialPort (whether obtained via requestPort()
+  // or an already-authorized port from getPorts()) and updating connection state.
+  const openPort = useCallback(async (port: SerialPort): Promise<boolean> => {
+    // Create a promise that rejects after 10 seconds
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Connection timeout after 10 seconds')), 10000);
+    });
+
+    // Race between opening the port and the timeout
+    await Promise.race([
+      port.open({ baudRate: 128000 }),
+      timeoutPromise
+    ]);
+
+    const id = getDeviceId(port);
+
+    setSerialPort(port);
+    setIsConnected(true);
+    setDeviceId(id);
+    setReconnectablePort(null);
+    return true;
+  }, []);
 
   const connect = useCallback(async (): Promise<boolean> => {
     if (serialPort) {
@@ -26,36 +89,33 @@ export const usePrinter = (): UsePrinterReturn => {
 
     try {
       const port = await navigator.serial.requestPort();
-      
-      // Create a promise that rejects after 10 seconds
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Connection timeout after 10 seconds')), 10000);
-      });
-      
-      // Race between opening the port and the timeout
-      await Promise.race([
-        port.open({ baudRate: 128000 }),
-        timeoutPromise
-      ]);
-      
-      const id = getDeviceId(port);
-      
-      setSerialPort(port);
-      setIsConnected(true);
-      setDeviceId(id);
-      return true;
+      return await openPort(port);
     } catch (e) {
       console.error('Failed to connect:', e);
-      
+
       // User cancelled the connection dialog
       if (e instanceof DOMException && e.name === 'NotFoundError') {
         return false;
       }
-      
+
       // Rethrow other errors to be handled by the caller
       throw e;
     }
-  }, [serialPort]);
+  }, [serialPort, openPort]);
+
+  const reconnect = useCallback(async (): Promise<boolean> => {
+    if (!reconnectablePort) return false;
+
+    try {
+      return await openPort(reconnectablePort.port);
+    } catch (e) {
+      console.error('Failed to reconnect:', e);
+      // The previously authorized port is no longer available (unplugged,
+      // revoked, etc.) — clear it so the UI falls back to "Connect printer".
+      setReconnectablePort(null);
+      throw e;
+    }
+  }, [reconnectablePort, openPort]);
 
   const disconnect = useCallback(async (): Promise<void> => {
     if (!serialPort) return;
@@ -160,7 +220,9 @@ export const usePrinter = (): UsePrinterReturn => {
   return {
     isConnected,
     deviceId,
+    reconnectablePort,
     connect,
+    reconnect,
     disconnect,
     printImage
   };
