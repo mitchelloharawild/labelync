@@ -1,3 +1,21 @@
+:root {
+  --color-bg: #1f2630;
+  --color-surface: #2a3240;
+  --color-surface-2: #3a4350;
+  --color-surface-2-hover: #4a5360;
+  --color-rail: #232b37;
+  --color-accent: #31d4c4;
+  --color-accent-hover: #28b9ab;
+  --color-accent-text: #0d3733;
+  --color-danger: #f44336;
+  --color-danger-hover: #c62828;
+  --color-amber: #f5a524;
+  --color-text: #ffffff;
+  --color-text-muted: #9aa5b4;
+  --color-border: #3a4350;
+  --color-field-bg: #1c222c;
+}
+
 * {
   box-sizing: border-box;
 }
