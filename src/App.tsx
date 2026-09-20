@@ -35,6 +35,9 @@ function App() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
 
+  const [copies, setCopies] = useState(1);
+  const [isPrinting, setIsPrinting] = useState(false);
+
   const { isConnected, deviceId, connect, disconnect, printImage } = usePrinter();
 
   // Check if browser supports Web Serial API
@@ -98,8 +101,15 @@ function App() {
 
   const handlePrint = async () => {
     const canvas = document.getElementById('qrCodeCanvas') as HTMLCanvasElement;
-    if (canvas) {
-      await printImage(canvas, printerConfig);
+    if (!canvas) return;
+
+    setIsPrinting(true);
+    try {
+      for (let i = 0; i < copies; i++) {
+        await printImage(canvas, printerConfig);
+      }
+    } finally {
+      setIsPrinting(false);
     }
   };
 
@@ -331,7 +341,12 @@ function App() {
                 onFieldVisibilityChange={handleFieldVisibilityChange}
               />
 
-              <ActionBar onPrint={handlePrint} />
+              <ActionBar
+                copies={copies}
+                onCopiesChange={setCopies}
+                onPrint={handlePrint}
+                isPrinting={isPrinting}
+              />
 
               {footer}
             </div>
