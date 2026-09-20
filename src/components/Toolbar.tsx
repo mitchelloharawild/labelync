@@ -6,6 +6,7 @@ interface ToolbarProps {
   theme: Theme;
   onOpenPaperSettings: () => void;
   onOpenTemplateModal: () => void;
+  onOpenBatchPrint: () => void;
   onOpenSetup: () => void;
   onCycleTheme: () => void;
 }
@@ -22,7 +23,7 @@ const THEME_LABEL: Record<Theme, string> = {
   dark: 'Dark',
 };
 
-const Toolbar = ({ theme, onOpenPaperSettings, onOpenTemplateModal, onOpenSetup, onCycleTheme }: ToolbarProps) => {
+const Toolbar = ({ theme, onOpenPaperSettings, onOpenTemplateModal, onOpenBatchPrint, onOpenSetup, onCycleTheme }: ToolbarProps) => {
   const ThemeIcon = THEME_ICON[theme];
 
   return (
@@ -36,10 +37,9 @@ const Toolbar = ({ theme, onOpenPaperSettings, onOpenTemplateModal, onOpenSetup,
           <IconGrid />
           <span>Templates</span>
         </button>
-        <button className="rail-btn rail-btn-inert" disabled title="CSV batch printing — coming soon">
+        <button className="rail-btn" onClick={onOpenBatchPrint} title="Batch print from CSV">
           <IconUpload />
           <span>Batch CSV</span>
-          <em className="soon-badge">Soon</em>
         </button>
       </div>
 

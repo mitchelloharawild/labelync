@@ -33,25 +33,6 @@
   cursor: not-allowed;
 }
 
-.rail-btn-inert {
-  opacity: 0.55;
-}
-
-.soon-badge {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  font-style: normal;
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--color-bg);
-  background: var(--color-text-muted);
-  border-radius: 4px;
-  padding: 1px 4px;
-}
-
 /* Mobile: horizontal chip row below the top bar, settings/theme stay in TopBar */
 @media (max-width: 899px) {
   .icon-rail {

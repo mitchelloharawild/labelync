@@ -4,6 +4,7 @@ import PrinterCanvas from './components/PrinterCanvas';
 import PrinterSetupModal from './components/PrinterSetupModal';
 import PaperSettingsModal from './components/PaperSettingsModal';
 import TemplateModal from './components/TemplateModal';
+import BatchPrintModal from './components/BatchPrintModal';
 import { PWAUpdateNotification } from './components/PWAUpdateNotification';
 import TopBar from './components/TopBar';
 import Toolbar from './components/Toolbar';
@@ -38,6 +39,7 @@ function App() {
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const [isPaperSettingsModalOpen, setIsPaperSettingsModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isBatchPrintModalOpen, setIsBatchPrintModalOpen] = useState(false);
 
   const [isConnecting, setIsConnecting] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
@@ -414,6 +416,7 @@ function App() {
             theme={theme}
             onOpenPaperSettings={() => setIsPaperSettingsModalOpen(true)}
             onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
+            onOpenBatchPrint={() => setIsBatchPrintModalOpen(true)}
             onOpenSetup={() => setIsSetupModalOpen(true)}
             onCycleTheme={handleCycleTheme}
           />
@@ -470,6 +473,15 @@ function App() {
         onClose={() => setIsTemplateModalOpen(false)}
         onSelectTemplate={handleSelectTemplate}
         currentTemplateId={currentTemplate.id}
+      />
+
+      <BatchPrintModal
+        isOpen={isBatchPrintModalOpen}
+        onClose={() => setIsBatchPrintModalOpen(false)}
+        template={currentTemplate}
+        printerConfig={printerConfig}
+        hiddenFields={hiddenFields}
+        printImage={printImage}
       />
     </div>
   );
