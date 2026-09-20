@@ -5,6 +5,9 @@ import PrinterSetupModal from './components/PrinterSetupModal';
 import PaperSettingsModal from './components/PaperSettingsModal';
 import TemplateModal from './components/TemplateModal';
 import { PWAUpdateNotification } from './components/PWAUpdateNotification';
+import TopBar from './components/TopBar';
+import Toolbar from './components/Toolbar';
+import ActionBar from './components/ActionBar';
 import { usePrinter } from './hooks/usePrinter';
 import { getDefaultConfig, loadPrinterConfig, savePrinterConfig } from './utils/printerStorage';
 import { getTemplate, getDefaultTemplate } from './utils/templateStorage';
@@ -220,21 +223,39 @@ function App() {
     }
   };
 
+  const footer = (
+    <footer className="app-footer">
+      <span className="version-text">v{APP_VERSION}</span>
+      <button
+        className="check-updates-button"
+        onClick={handleCheckForUpdates}
+        title="Check for updates on GitHub"
+      >
+        Check for Updates
+      </button>
+    </footer>
+  );
+
   return (
-    <div className="app-container">
+    <div className="app-root">
       <PWAUpdateNotification />
-      
+
       {notification && (
         <div className={`notification notification-${notification.type}`}>
           {notification.message}
         </div>
       )}
-      
-      <div className="form-container">
-        <h2>Labelync</h2>
-        
-        {!isConnected ? (
-          <>
+
+      <TopBar
+        isConnected={isConnected}
+        deviceLabel={`Phomemo ${printerConfig.deviceModel}`}
+        onDisconnect={handleDisconnect}
+        onOpenSetup={() => setIsSetupModalOpen(true)}
+      />
+
+      {!isConnected ? (
+        <div className="disconnected-panel">
+          <div className="disconnected-card">
             {!isSerialSupported && (
               <div className="browser-warning">
                 <p><strong>⚠️ Unsupported Browser</strong></p>
@@ -243,14 +264,14 @@ function App() {
               </div>
             )}
 
-            <button 
-              className="print-button connect-button" 
+            <button
+              className="connect-button"
               onClick={handleConnect}
               disabled={!isSerialSupported || isConnecting}
             >
               {isConnecting ? 'Connecting...' : 'Connect printer'}
             </button>
-            
+
             <div className="quick-start-guide">
               <div className="guide-section">
                 <h4>Supported Printers</h4>
@@ -266,7 +287,7 @@ function App() {
                   </a>
                 </p>
               </div>
-              
+
               <div className="guide-section">
                 <h4>Quick Start</h4>
                 <ol>
@@ -277,7 +298,7 @@ function App() {
                   <li>Design and print your stickers</li>
                 </ol>
               </div>
-              
+
               <div className="guide-section tips-section">
                 <h4>✨ Features</h4>
                 <ul>
@@ -288,82 +309,44 @@ function App() {
                 </ul>
               </div>
             </div>
-          </>
-        ) : (
-          <>
-            <div className="connection-controls">
-              <button 
-                className="print-button disconnect-button" 
-                onClick={handleDisconnect}
-              >
-                Disconnect
-              </button>
-              <button 
-                className="settings-button-small" 
-                onClick={() => setIsSetupModalOpen(true)}
-                title="Printer Settings"
-              >
-                ⚙️
-              </button>
+
+            {footer}
+          </div>
+        </div>
+      ) : (
+        <div className="app-body">
+          <Toolbar
+            onOpenPaperSettings={() => setIsPaperSettingsModalOpen(true)}
+            onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
+            onOpenSetup={() => setIsSetupModalOpen(true)}
+          />
+
+          <div className="content-split">
+            <div className="controls-pane">
+              <PrinterForm
+                template={currentTemplate}
+                textFieldValues={textFieldValues}
+                onTextFieldChange={handleTextFieldChange}
+                hiddenFields={hiddenFields}
+                onFieldVisibilityChange={handleFieldVisibilityChange}
+              />
+
+              <ActionBar onPrint={handlePrint} />
+
+              {footer}
             </div>
-            
-            <button 
-              className="print-button paper-settings-button" 
-              onClick={() => setIsPaperSettingsModalOpen(true)}
-            >
-              📄 Paper Settings
-            </button>
-            
-            <button 
-              className="print-button template-button" 
-              onClick={() => setIsTemplateModalOpen(true)}
-            >
-              📋 Template Manager
-            </button>
-            
-            <PrinterForm 
-              template={currentTemplate}
-              textFieldValues={textFieldValues}
-              onTextFieldChange={handleTextFieldChange}
-              hiddenFields={hiddenFields}
-              onFieldVisibilityChange={handleFieldVisibilityChange}
-            />
 
-            <button 
-              className="print-button" 
-              onClick={handlePrint}
-              disabled={!isConnected}
-            >
-              🖨 Print Sticker
-            </button>
-
-            {/* <button 
-              className="print-button export-button" 
-              onClick={handleExportSVG}
-            >
-              💾 Export SVG
-            </button> */}
-
-            <PrinterCanvas 
-              template={currentTemplate}
-              textFieldValues={textFieldValues}
-              printerConfig={printerConfig}
-              hiddenFields={hiddenFields}
-            />
-          </>
-        )}
-        
-        <footer className="app-footer">
-          <span className="version-text">v{APP_VERSION}</span>
-          <button 
-            className="check-updates-button"
-            onClick={handleCheckForUpdates}
-            title="Check for updates on GitHub"
-          >
-            Check for Updates
-          </button>
-        </footer>
-      </div>
+            <div className="preview-pane">
+              <PrinterCanvas
+                template={currentTemplate}
+                textFieldValues={textFieldValues}
+                printerConfig={printerConfig}
+                hiddenFields={hiddenFields}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <PrinterSetupModal
         isOpen={isSetupModalOpen}

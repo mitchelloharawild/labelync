@@ -1,125 +1,137 @@
 body {
-  font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #333;
-  color: #fff;
+  background-color: var(--color-bg);
+  color: var(--color-text);
 }
 
-.app-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-}
-
-.form-container {
+.app-root {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  background-color: #444;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-  max-width: 400px;
-  width: 100%;
+  min-height: 100dvh;
 }
 
-h2 {
-  margin: 0 0 15px 0;
-  text-align: center;
-  width: 100%;
-}
+/* ---------- Connected layout: top bar + rail/toolbar + split content ---------- */
 
-.connection-controls {
+.app-body {
+  flex-grow: 1;
   display: flex;
-  gap: 8px;
-  width: 100%;
-  margin-bottom: 10px;
+  flex-direction: column;
 }
 
-.settings-button-small {
-  background-color: #555;
-  border: none;
-  font-size: 1.3rem;
-  cursor: pointer;
-  padding: 10px 15px;
-  border-radius: 5px;
-  transition: background-color 0.2s;
-  filter: grayscale(1);
-  opacity: 0.8;
-  flex-shrink: 0;
+.content-split {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-.settings-button-small:hover {
-  opacity: 1;
-  background-color: #666;
+.controls-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  padding-bottom: 100px; /* clears the fixed action bar on mobile */
 }
 
-.print-button {
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #555;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
+.preview-pane {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0 16px 16px;
+}
+
+.template-info {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+@media (min-width: 900px) {
+  .app-body {
+    flex-direction: row;
+  }
+
+  .content-split {
+    flex-direction: row;
+    overflow: hidden;
+  }
+
+  .controls-pane {
+    width: 420px;
+    flex-shrink: 0;
+    padding: 24px;
+    padding-bottom: 24px;
+    overflow-y: auto;
+  }
+
+  .preview-pane {
+    flex-grow: 1;
+    background: var(--color-surface);
+    border-radius: 12px;
+    margin: 24px 24px 24px 0;
+    padding: 24px;
+    overflow: auto;
+  }
+
+  .app-root {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .top-bar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+}
+
+/* Mobile ordering: preview above the fields, matching the sketch */
+@media (max-width: 899px) {
+  .content-split {
+    flex-direction: column;
+  }
+
+  .preview-pane {
+    order: -1;
+  }
+}
+
+/* ---------- Disconnected / onboarding screen ---------- */
+
+.disconnected-panel {
+  flex-grow: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.disconnected-card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+}
+
+.connect-button {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--color-accent);
+  color: var(--color-accent-text);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
   transition: background-color 0.2s;
 }
 
-.print-button:hover:not(:disabled) {
-  background-color: #666;
+.connect-button:hover:not(:disabled) {
+  background-color: var(--color-accent-hover);
 }
 
-.print-button:disabled {
+.connect-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-/* Connection button modifiers - use higher specificity */
-.print-button.connect-button {
-  background-color: #4CAF50;
-  margin-bottom: 10px;
-}
-
-.print-button.connect-button:hover:not(:disabled) {
-  background-color: #3d8b40;
-}
-
-.print-button.disconnect-button {
-  background-color: #f44336;
-  flex-grow: 1;
-  margin-top: 0;
-}
-
-.print-button.disconnect-button:hover {
-  background-color: #c62828;
-}
-
-.print-button.paper-settings-button {
-  background-color: #2196F3;
-  margin-top: 0;
-  margin-bottom: 10px;
-}
-
-.print-button.paper-settings-button:hover {
-  background-color: #1976D2;
-}
-
-.print-button.template-button {
-  background-color: #9C27B0;
-  margin-top: 0;
-  margin-bottom: 10px;
-}
-
-.print-button.template-button:hover {
-  background-color: #7B1FA2;
 }
 
 /* Browser Warning Styles */
@@ -127,10 +139,10 @@ h2 {
   width: 100%;
   margin-bottom: 15px;
   padding: 12px 15px;
-  background-color: #5a5a5a;
+  background-color: var(--color-surface-2);
   border-radius: 5px;
-  border-left: 3px solid #ff9800;
-  color: #fff;
+  border-left: 3px solid var(--color-accent);
+  color: var(--color-text);
   text-align: left;
 }
 
@@ -146,7 +158,7 @@ h2 {
 }
 
 .browser-warning strong {
-  color: #ff9800;
+  color: var(--color-accent);
 }
 
 /* Notification Styles */
@@ -178,7 +190,7 @@ h2 {
 }
 
 .notification-error {
-  background-color: #f44336;
+  background-color: var(--color-danger);
   color: #fff;
 }
 
@@ -201,7 +213,7 @@ h2 {
 
 .quick-start-guide h3 {
   margin: 0 0 15px 0;
-  color: #4CAF50;
+  color: var(--color-accent);
   font-size: 1.3rem;
   text-align: center;
 }
@@ -209,14 +221,14 @@ h2 {
 .guide-section {
   margin-bottom: 15px;
   padding: 15px;
-  background-color: #555;
+  background-color: var(--color-surface-2);
   border-radius: 5px;
-  border-left: 3px solid #4CAF50;
+  border-left: 3px solid var(--color-accent);
 }
 
 .guide-section h4 {
   margin: 0 0 8px 0;
-  color: #fff;
+  color: var(--color-text);
   font-size: 1rem;
 }
 
@@ -249,11 +261,11 @@ h2 {
 }
 
 .guide-section.tips-section {
-  border-left-color: #FFC107;
+  border-left-color: var(--color-accent);
 }
 
 .guide-section a {
-  color: #4CAF50;
+  color: var(--color-accent);
   text-decoration: none;
 }
 
@@ -266,7 +278,7 @@ h2 {
   width: 100%;
   margin-top: 20px;
   padding-top: 15px;
-  border-top: 1px solid #666;
+  border-top: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -274,14 +286,14 @@ h2 {
 }
 
 .version-text {
-  color: #999;
+  color: #8892a0;
   font-size: 0.85rem;
   font-weight: 500;
 }
 
 .check-updates-button {
-  background-color: #555;
-  color: #fff;
+  background-color: var(--color-surface-2);
+  color: var(--color-text);
   border: none;
   border-radius: 4px;
   padding: 6px 12px;
@@ -292,36 +304,28 @@ h2 {
 }
 
 .check-updates-button:hover {
-  background-color: #4CAF50;
+  background-color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
 @media (max-width: 480px) {
-  .form-container {
-    padding: 15px;
-    max-width: 100%;
-  }
-  
   .browser-warning {
     padding: 12px;
   }
-  
-  .browser-warning h3 {
-    font-size: 1rem;
-  }
-  
+
   .browser-warning p,
   .browser-warning li {
     font-size: 0.85rem;
   }
-  
+
   .guide-section {
     padding: 12px;
   }
-  
+
   .guide-section h4 {
     font-size: 0.95rem;
   }
-  
+
   .guide-section p,
   .guide-section li {
     font-size: 0.85rem;
