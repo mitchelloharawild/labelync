@@ -1,20 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react';
-import type { PrinterConfig, Template } from '../types';
+import type { PrinterConfig, Template, MqttConfig } from '../types';
 import { FieldType } from '../types';
 import { getFreshTextFieldValues } from '../utils/svgTextUtils';
 import { parseCSV } from '../utils/csvParser';
-import { renderTemplateToCanvas } from '../utils/renderTemplateToCanvas';
+import { printTemplateWithValues } from '../utils/printFieldValues';
+import type { MqttActivityEntry, MqttConnectionState } from '../hooks/useMqttPrinting';
 import Modal from './Modal';
+import MqttPanel from './MqttPanel';
 import './ModalForms.css';
-import './BatchPrintModal.css';
+import './DataInputModal.css';
 
-interface BatchPrintModalProps {
+interface DataInputModalProps {
   isOpen: boolean;
   onClose: () => void;
   template: Template;
   printerConfig: PrinterConfig;
   hiddenFields: Record<string, boolean>;
   printImage: (canvas: HTMLCanvasElement, config: PrinterConfig) => Promise<void>;
+  onNotify: (message: string, type: 'error' | 'success' | 'info') => void;
+  mqttConfig: MqttConfig;
+  onMqttConfigChange: (config: MqttConfig) => void;
+  mqttConnectionState: MqttConnectionState;
+  mqttConnectionError: string | null;
+  mqttActivityLog: MqttActivityEntry[];
+  onMqttConnect: () => void;
+  onMqttDisconnect: () => void;
 }
 
 interface FailedRow {
@@ -29,6 +39,7 @@ interface BatchProgress {
   failed: FailedRow[];
 }
 
+type DataInputTab = 'upload' | 'mqtt';
 type BatchStep = 'upload' | 'mapping' | 'printing' | 'summary';
 
 const FIELD_TYPE_LABEL: Partial<Record<FieldType, string>> = {
@@ -40,14 +51,24 @@ const FIELD_TYPE_LABEL: Partial<Record<FieldType, string>> = {
 
 const EMPTY_PROGRESS: BatchProgress = { current: 0, total: 0, succeeded: 0, failed: [] };
 
-const BatchPrintModal: React.FC<BatchPrintModalProps> = ({
+const DataInputModal: React.FC<DataInputModalProps> = ({
   isOpen,
   onClose,
   template,
   printerConfig,
   hiddenFields,
-  printImage
+  printImage,
+  onNotify,
+  mqttConfig,
+  onMqttConfigChange,
+  mqttConnectionState,
+  mqttConnectionError,
+  mqttActivityLog,
+  onMqttConnect,
+  onMqttDisconnect
 }) => {
+  const [activeTab, setActiveTab] = useState<DataInputTab>('upload');
+
   const [step, setStep] = useState<BatchStep>('upload');
   const [fileName, setFileName] = useState('');
   const [headers, setHeaders] = useState<string[]>([]);
@@ -64,9 +85,11 @@ const BatchPrintModal: React.FC<BatchPrintModalProps> = ({
   const mappableFields = template.fieldMetadata.filter(f => f.type !== FieldType.IMAGE);
   const imageFieldCount = template.fieldMetadata.length - mappableFields.length;
 
-  // Reset to a clean slate every time the modal is (re)opened.
+  // Reset the CSV flow (but not the MQTT connection, which lives at the App
+  // level and keeps running independent of this modal) every time it opens.
   useEffect(() => {
     if (isOpen) {
+      setActiveTab('upload');
       setStep('upload');
       setFileName('');
       setHeaders([]);
@@ -99,14 +122,15 @@ const BatchPrintModal: React.FC<BatchPrintModalProps> = ({
         return;
       }
 
-      // Try to auto-map columns whose header matches a field's id or label.
+      // Auto-map columns whose header matches a field's id or label —
+      // the id takes priority so an exact field-id match always wins.
       const initialMapping: Record<string, string> = {};
       mappableFields.forEach(field => {
-        const match = parsed.headers.find(h =>
-          h.toLowerCase() === field.id.toLowerCase() ||
-          (!!field.label && h.toLowerCase() === field.label.toLowerCase())
-        );
-        initialMapping[field.id] = match ?? '';
+        const idMatch = parsed.headers.find(h => h.toLowerCase() === field.id.toLowerCase());
+        const labelMatch = !idMatch && field.label
+          ? parsed.headers.find(h => h.toLowerCase() === field.label!.toLowerCase())
+          : undefined;
+        initialMapping[field.id] = idMatch ?? labelMatch ?? '';
       });
 
       setFileName(file.name);
@@ -126,6 +150,15 @@ const BatchPrintModal: React.FC<BatchPrintModalProps> = ({
   };
 
   const runBatch = async () => {
+    const missingRequired = mappableFields.filter(f => !f.optional && !columnMapping[f.id]);
+    if (missingRequired.length > 0) {
+      onNotify(
+        `Map a column for every required field before printing — missing: ${missingRequired.map(f => f.label || f.id).join(', ')}.`,
+        'error'
+      );
+      return;
+    }
+
     cancelRef.current = false;
     setStep('printing');
     setProgress({ current: 0, total: rows.length, succeeded: 0, failed: [] });
@@ -155,8 +188,7 @@ const BatchPrintModal: React.FC<BatchPrintModalProps> = ({
       // App.tsx's handlePrint) — a failed row is recorded and the batch
       // continues rather than aborting.
       try {
-        const canvas = await renderTemplateToCanvas(template, rowValues, printerConfig, hiddenFields);
-        await printImage(canvas, printerConfig);
+        await printTemplateWithValues(template, rowValues, printerConfig, hiddenFields, printImage);
         succeeded++;
       } catch (error) {
         failed.push({
@@ -188,7 +220,7 @@ const BatchPrintModal: React.FC<BatchPrintModalProps> = ({
   const mappedFieldCount = mappableFields.filter(f => columnMapping[f.id]).length;
   const stoppedEarly = step === 'summary' && progress.current < progress.total;
 
-  const footer = (() => {
+  const uploadFooter = (() => {
     if (step === 'upload') {
       return (
         <>
@@ -230,105 +262,140 @@ const BatchPrintModal: React.FC<BatchPrintModalProps> = ({
     );
   })();
 
+  const footer = activeTab === 'upload'
+    ? uploadFooter
+    : <button className="button button-primary" onClick={onClose}>Close</button>;
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Batch Print from CSV"
+      title="Data Input"
       footer={footer}
       className="batch-print-modal-content"
     >
-      {step === 'upload' && (
-        <div className="batch-step batch-upload-step">
-          <p>
-            Upload a CSV file with one row per label. Its first row should be column
-            headers — each column can then be mapped to a field in the current template
-            (<strong>{template.name}</strong>) on the next step.
-          </p>
-          {uploadError && <div className="batch-error">{uploadError}</div>}
-        </div>
-      )}
+      <div className="data-input-tabs">
+        <button
+          className={`data-input-tab ${activeTab === 'upload' ? 'active' : ''}`}
+          onClick={() => setActiveTab('upload')}
+        >
+          Upload File
+        </button>
+        <button
+          className={`data-input-tab ${activeTab === 'mqtt' ? 'active' : ''}`}
+          onClick={() => setActiveTab('mqtt')}
+        >
+          Live (MQTT)
+        </button>
+      </div>
 
-      {step === 'mapping' && (
-        <div className="batch-step batch-mapping-step">
-          <p className="batch-summary-line">
-            <strong>{rows.length}</strong> row{rows.length === 1 ? '' : 's'} found in{' '}
-            <strong>{fileName}</strong> &mdash; {mappedFieldCount} of {mappableFields.length}{' '}
-            field{mappableFields.length === 1 ? '' : 's'} mapped.
-          </p>
-
-          <div className="batch-mapping-list">
-            {mappableFields.map(field => (
-              <div className="batch-mapping-row" key={field.id}>
-                <label htmlFor={`batch-map-${field.id}`}>
-                  {field.label || field.id}
-                  <span className="batch-field-type">{FIELD_TYPE_LABEL[field.type] || field.type}</span>
-                </label>
-                <select
-                  id={`batch-map-${field.id}`}
-                  value={columnMapping[field.id] || ''}
-                  onChange={(e) => handleMappingChange(field.id, e.target.value)}
-                >
-                  <option value="">Use template default</option>
-                  {headers.map(header => (
-                    <option key={header} value={header}>{header}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </div>
-
-          {imageFieldCount > 0 && (
-            <p className="batch-note">
-              {imageFieldCount} image field{imageFieldCount === 1 ? '' : 's'} in this template
-              can&apos;t be set from CSV data &mdash; the template&apos;s current image will be
-              used for every label.
-            </p>
-          )}
-        </div>
-      )}
-
-      {step === 'printing' && (
-        <div className="batch-step batch-printing-step">
-          <p className="batch-summary-line">
-            Printing label {Math.min(progress.current + 1, progress.total)} of {progress.total}&hellip;
-          </p>
-          <div className="batch-progress-bar">
-            <div
-              className="batch-progress-fill"
-              style={{ width: `${progress.total ? (progress.current / progress.total) * 100 : 0}%` }}
-            />
-          </div>
-          <p className="batch-progress-counts">
-            <span className="batch-count-success">{progress.succeeded} succeeded</span>
-            {progress.failed.length > 0 && (
-              <span className="batch-count-failed">{progress.failed.length} failed</span>
-            )}
-          </p>
-        </div>
-      )}
-
-      {step === 'summary' && (
-        <div className="batch-step batch-summary-step">
-          <p className="batch-summary-line">
-            {progress.succeeded} of {progress.total} label{progress.total === 1 ? '' : 's'} printed
-            successfully.{stoppedEarly && ' Batch stopped early.'}
-          </p>
-
-          {progress.failed.length > 0 && (
-            <div className="batch-failed-list">
-              <p className="batch-failed-heading">Failed rows:</p>
-              <ul>
-                {progress.failed.map(f => (
-                  <li key={f.row}>CSV row {f.row}: {f.error}</li>
-                ))}
-              </ul>
+      {activeTab === 'upload' && (
+        <>
+          {step === 'upload' && (
+            <div className="batch-step batch-upload-step">
+              <p>
+                Upload a CSV file with one row per label. Its first row should be column
+                headers — each column can then be mapped to a field in the current template
+                (<strong>{template.name}</strong>) on the next step.
+              </p>
+              {uploadError && <div className="batch-error">{uploadError}</div>}
             </div>
           )}
-        </div>
+
+          {step === 'mapping' && (
+            <div className="batch-step batch-mapping-step">
+              <p className="batch-summary-line">
+                <strong>{rows.length}</strong> row{rows.length === 1 ? '' : 's'} found in{' '}
+                <strong>{fileName}</strong> &mdash; {mappedFieldCount} of {mappableFields.length}{' '}
+                field{mappableFields.length === 1 ? '' : 's'} mapped.
+              </p>
+
+              <div className="batch-mapping-list">
+                {mappableFields.map(field => (
+                  <div className="batch-mapping-row" key={field.id}>
+                    <label htmlFor={`batch-map-${field.id}`}>
+                      {field.label || field.id}
+                      <span className="batch-field-type">{FIELD_TYPE_LABEL[field.type] || field.type}</span>
+                    </label>
+                    <select
+                      id={`batch-map-${field.id}`}
+                      value={columnMapping[field.id] || ''}
+                      onChange={(e) => handleMappingChange(field.id, e.target.value)}
+                    >
+                      <option value="">Use template default</option>
+                      {headers.map(header => (
+                        <option key={header} value={header}>{header}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
+
+              {imageFieldCount > 0 && (
+                <p className="batch-note">
+                  {imageFieldCount} image field{imageFieldCount === 1 ? '' : 's'} in this template
+                  can&apos;t be set from CSV data &mdash; the template&apos;s current image will be
+                  used for every label.
+                </p>
+              )}
+            </div>
+          )}
+
+          {step === 'printing' && (
+            <div className="batch-step batch-printing-step">
+              <p className="batch-summary-line">
+                Printing label {Math.min(progress.current + 1, progress.total)} of {progress.total}&hellip;
+              </p>
+              <div className="batch-progress-bar">
+                <div
+                  className="batch-progress-fill"
+                  style={{ width: `${progress.total ? (progress.current / progress.total) * 100 : 0}%` }}
+                />
+              </div>
+              <p className="batch-progress-counts">
+                <span className="batch-count-success">{progress.succeeded} succeeded</span>
+                {progress.failed.length > 0 && (
+                  <span className="batch-count-failed">{progress.failed.length} failed</span>
+                )}
+              </p>
+            </div>
+          )}
+
+          {step === 'summary' && (
+            <div className="batch-step batch-summary-step">
+              <p className="batch-summary-line">
+                {progress.succeeded} of {progress.total} label{progress.total === 1 ? '' : 's'} printed
+                successfully.{stoppedEarly && ' Batch stopped early.'}
+              </p>
+
+              {progress.failed.length > 0 && (
+                <div className="batch-failed-list">
+                  <p className="batch-failed-heading">Failed rows:</p>
+                  <ul>
+                    {progress.failed.map(f => (
+                      <li key={f.row}>CSV row {f.row}: {f.error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+
+      {activeTab === 'mqtt' && (
+        <MqttPanel
+          config={mqttConfig}
+          onConfigChange={onMqttConfigChange}
+          connectionState={mqttConnectionState}
+          connectionError={mqttConnectionError}
+          activityLog={mqttActivityLog}
+          onConnect={onMqttConnect}
+          onDisconnect={onMqttDisconnect}
+        />
       )}
     </Modal>
   );
 };
 
-export default BatchPrintModal;
+export default DataInputModal;

@@ -6,7 +6,7 @@ interface ToolbarProps {
   theme: Theme;
   onOpenPaperSettings: () => void;
   onOpenTemplateModal: () => void;
-  onOpenBatchPrint: () => void;
+  onOpenDataInput: () => void;
   onOpenSetup: () => void;
   onCycleTheme: () => void;
 }
@@ -23,7 +23,7 @@ const THEME_LABEL: Record<Theme, string> = {
   dark: 'Dark',
 };
 
-const Toolbar = ({ theme, onOpenPaperSettings, onOpenTemplateModal, onOpenBatchPrint, onOpenSetup, onCycleTheme }: ToolbarProps) => {
+const Toolbar = ({ theme, onOpenPaperSettings, onOpenTemplateModal, onOpenDataInput, onOpenSetup, onCycleTheme }: ToolbarProps) => {
   const ThemeIcon = THEME_ICON[theme];
 
   return (
@@ -37,9 +37,9 @@ const Toolbar = ({ theme, onOpenPaperSettings, onOpenTemplateModal, onOpenBatchP
           <IconGrid />
           <span>Templates</span>
         </button>
-        <button className="rail-btn" onClick={onOpenBatchPrint} title="Batch print from CSV">
+        <button className="rail-btn" onClick={onOpenDataInput} title="Import data or connect a live MQTT feed">
           <IconUpload />
-          <span>Batch CSV</span>
+          <span>Data Input</span>
         </button>
       </div>
 

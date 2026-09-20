@@ -63,3 +63,15 @@ export interface PrinterConfig {
   svgTextFields?: Record<string, string>; // text field IDs and their values
   lastUsedTemplateId?: string; // ID of the last used template
 }
+
+// Settings for the live MQTT print endpoint. The broker is user-provided
+// (self-hosted or a hosted broker of their choosing) — labelync only ever
+// acts as an MQTT client over WebSockets, never a server.
+export interface MqttConfig {
+  brokerUrl: string; // e.g. wss://broker.local:8884/mqtt or ws://192.168.1.50:9001
+  username?: string;
+  password?: string;
+  requestTopic: string; // e.g. labelync/print
+  statusTopic?: string; // defaults to `${requestTopic}/status` if unset
+  clientId?: string; // auto-generated if unset, persisted so reconnects reuse it
+}

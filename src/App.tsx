@@ -1,22 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import PrinterForm from './components/PrinterForm';
 import PrinterCanvas from './components/PrinterCanvas';
 import PrinterSetupModal from './components/PrinterSetupModal';
 import PaperSettingsModal from './components/PaperSettingsModal';
 import TemplateModal from './components/TemplateModal';
-import BatchPrintModal from './components/BatchPrintModal';
+import DataInputModal from './components/DataInputModal';
 import { PWAUpdateNotification } from './components/PWAUpdateNotification';
 import TopBar from './components/TopBar';
 import Toolbar from './components/Toolbar';
 import ActionBar from './components/ActionBar';
 import { usePrinter } from './hooks/usePrinter';
+import { useMqttPrinting, type MqttMessageResult } from './hooks/useMqttPrinting';
 import { getDefaultConfig, loadPrinterConfig, savePrinterConfig } from './utils/printerStorage';
 import { getTemplate, getDefaultTemplate } from './utils/templateStorage';
 import { getFreshTextFieldValues } from './utils/svgTextUtils';
 import { loadTheme, saveTheme } from './utils/themeStorage';
+import { loadMqttConfig, saveMqttConfig } from './utils/mqttStorage';
+import { validateFieldKeys, hasValidationErrors, formatValidationError } from './utils/templateFieldValidation';
+import { printTemplateWithValues } from './utils/printFieldValues';
 
-import type { Template, PrinterConfig, Theme } from './types';
+import type { Template, PrinterConfig, Theme, MqttConfig } from './types';
 import './App.css';
+
+const DEFAULT_MQTT_CONFIG: MqttConfig = {
+  brokerUrl: '',
+  requestTopic: 'labelync/print'
+};
 
 // Surface color to sync into the theme-color meta tag for each resolved theme
 const THEME_COLOR: Record<'light' | 'dark', string> = {
@@ -39,7 +48,7 @@ function App() {
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const [isPaperSettingsModalOpen, setIsPaperSettingsModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [isBatchPrintModalOpen, setIsBatchPrintModalOpen] = useState(false);
+  const [isDataInputModalOpen, setIsDataInputModalOpen] = useState(false);
 
   const [isConnecting, setIsConnecting] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
@@ -49,8 +58,50 @@ function App() {
   const [isPrinting, setIsPrinting] = useState(false);
 
   const [theme, setTheme] = useState<Theme>(loadTheme);
+  const [mqttConfig, setMqttConfig] = useState<MqttConfig>(() => loadMqttConfig() ?? DEFAULT_MQTT_CONFIG);
 
   const { isConnected, deviceId, reconnectablePort, connect, reconnect, disconnect, printImage } = usePrinter();
+
+  const notify = useCallback((message: string, type: 'error' | 'success' | 'info') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), type === 'error' ? 5000 : 3000);
+  }, []);
+
+  // Applies incoming MQTT data to whatever template is currently loaded —
+  // live requests never carry their own template selection (see _dev/mqtt.md).
+  const handleMqttMessage = useCallback(async (fields: Record<string, string>): Promise<MqttMessageResult> => {
+    const validation = validateFieldKeys(currentTemplate.fieldMetadata, Object.keys(fields));
+    if (hasValidationErrors(validation)) {
+      const error = formatValidationError(validation);
+      notify(`MQTT print skipped — field mismatch (${error}).`, 'error');
+      return { success: false, error };
+    }
+
+    try {
+      await printTemplateWithValues(currentTemplate, fields, printerConfig, hiddenFields, printImage);
+      notify('Printed a label from an MQTT message.', 'success');
+      return { success: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      notify(`MQTT print failed: ${message}`, 'error');
+      return { success: false, error: message };
+    }
+  }, [currentTemplate, printerConfig, hiddenFields, printImage, notify]);
+
+  const {
+    connectionState: mqttConnectionState,
+    connectionError: mqttConnectionError,
+    activityLog: mqttActivityLog,
+    connect: connectMqtt,
+    disconnect: disconnectMqtt
+  } = useMqttPrinting(handleMqttMessage);
+
+  const handleMqttConfigChange = (config: MqttConfig) => {
+    setMqttConfig(config);
+    saveMqttConfig(config);
+  };
+
+  const handleMqttConnect = () => connectMqtt(mqttConfig);
 
   // Apply the selected theme to the document and keep the PWA theme-color
   // meta tag in sync, including when "system" tracks OS preference changes.
@@ -416,7 +467,7 @@ function App() {
             theme={theme}
             onOpenPaperSettings={() => setIsPaperSettingsModalOpen(true)}
             onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
-            onOpenBatchPrint={() => setIsBatchPrintModalOpen(true)}
+            onOpenDataInput={() => setIsDataInputModalOpen(true)}
             onOpenSetup={() => setIsSetupModalOpen(true)}
             onCycleTheme={handleCycleTheme}
           />
@@ -475,13 +526,21 @@ function App() {
         currentTemplateId={currentTemplate.id}
       />
 
-      <BatchPrintModal
-        isOpen={isBatchPrintModalOpen}
-        onClose={() => setIsBatchPrintModalOpen(false)}
+      <DataInputModal
+        isOpen={isDataInputModalOpen}
+        onClose={() => setIsDataInputModalOpen(false)}
         template={currentTemplate}
         printerConfig={printerConfig}
         hiddenFields={hiddenFields}
         printImage={printImage}
+        onNotify={notify}
+        mqttConfig={mqttConfig}
+        onMqttConfigChange={handleMqttConfigChange}
+        mqttConnectionState={mqttConnectionState}
+        mqttConnectionError={mqttConnectionError}
+        mqttActivityLog={mqttActivityLog}
+        onMqttConnect={handleMqttConnect}
+        onMqttDisconnect={disconnectMqtt}
       />
     </div>
   );
