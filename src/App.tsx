@@ -521,6 +521,11 @@ function App() {
         onClose={() => setIsTemplateModalOpen(false)}
         onSelectTemplate={handleSelectTemplate}
         currentTemplateId={currentTemplate.id}
+        paperAspectRatio={
+          printerConfig.orientation === 'landscape'
+            ? printerConfig.paperHeight / printerConfig.paperWidth
+            : printerConfig.paperWidth / printerConfig.paperHeight
+        }
       />
 
       <DataInputModal

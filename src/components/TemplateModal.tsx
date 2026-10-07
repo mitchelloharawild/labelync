@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { Template } from '../types';
 import { 
   saveTemplate, 
@@ -9,6 +9,7 @@ import {
   updateTemplateUsage 
 } from '../utils/templateStorage';
 import { extractTextFieldIds } from '../utils/svgTextUtils';
+import { getSvgAspectRatio, aspectRatiosMismatch } from '../utils/svgAspectRatio';
 import Modal from './Modal';
 import './TemplateModal.css';
 
@@ -17,17 +18,28 @@ interface TemplateModalProps {
   onClose: () => void;
   onSelectTemplate: (template: Template) => void;
   currentTemplateId?: string;
+  paperAspectRatio?: number | null; // current paper's width / height, as displayed
 }
 
 const TemplateModal: React.FC<TemplateModalProps> = ({
   isOpen,
   onClose,
   onSelectTemplate,
-  currentTemplateId
+  currentTemplateId,
+  paperAspectRatio = null
 }) => {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const mismatchedTemplateIds = useMemo(
+    () => new Set(
+      templates
+        .filter(t => aspectRatiosMismatch(paperAspectRatio, getSvgAspectRatio(t.svgContent)))
+        .map(t => t.id)
+    ),
+    [templates, paperAspectRatio]
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -259,6 +271,11 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
                   <div className="template-name">{template.name}</div>
                   <div className="template-meta">
                     {getFieldTypeSummary(template)}
+                    {mismatchedTemplateIds.has(template.id) && (
+                      <span className="shape-mismatch" title="Doesn't match the current paper's shape">
+                        {' '}⚠
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

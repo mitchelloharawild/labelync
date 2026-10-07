@@ -25,3 +25,19 @@ export const getSvgAspectRatio = (svgContent: string): number | null => {
 
   return null;
 };
+
+// How far a paper's aspect ratio may deviate from a template's before we warn.
+export const ASPECT_RATIO_TOLERANCE = 0.03;
+
+/**
+ * Whether a paper and template aspect ratio differ enough that the template
+ * will be letterboxed. Returns false when either ratio is unknown.
+ */
+export const aspectRatiosMismatch = (
+  paperAspectRatio: number | null,
+  templateAspectRatio: number | null
+): boolean => {
+  if (!paperAspectRatio || !templateAspectRatio) return false;
+  const deviation = Math.abs(paperAspectRatio - templateAspectRatio) / templateAspectRatio;
+  return deviation > ASPECT_RATIO_TOLERANCE;
+};

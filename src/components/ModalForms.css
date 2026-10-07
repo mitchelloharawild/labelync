@@ -74,6 +74,11 @@
   background-color: var(--color-surface-2-hover);
 }
 
+/* Warning marker for a paper/template shape mismatch on a card */
+.shape-mismatch {
+  color: var(--color-amber);
+}
+
 /* Hover-revealed delete button with inline confirm, shared by card grids */
 
 .delete-btn {

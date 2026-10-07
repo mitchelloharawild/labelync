@@ -121,10 +121,6 @@
   color: var(--color-text-muted);
 }
 
-.paper-mismatch {
-  color: var(--color-amber);
-}
-
 .new-paper-btn {
   width: 100%;
 }

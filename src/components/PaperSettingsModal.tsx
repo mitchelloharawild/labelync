@@ -2,7 +2,7 @@ import React from 'react';
 import type { PaperPreset, PrinterConfig, Template } from '../types';
 import { getProtocolFamily, M02_FIXED_PAPER_WIDTH_MM } from '../types';
 import Modal from './Modal';
-import { getSvgAspectRatio } from '../utils/svgAspectRatio';
+import { getSvgAspectRatio, aspectRatiosMismatch } from '../utils/svgAspectRatio';
 import {
   loadPaperPresets,
   savePaperPreset,
@@ -21,9 +21,6 @@ interface PaperSettingsModalProps {
 }
 
 type Orientation = PrinterConfig['orientation'];
-
-// How far the paper's aspect ratio may deviate from the template's before we warn.
-const ASPECT_RATIO_TOLERANCE = 0.03;
 
 // Largest dimension (px) of the paper shape drawn on each preset card.
 const PREVIEW_SIZE = 72;
@@ -99,8 +96,7 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
     const { displayWidth, displayHeight } = getDisplaySize(width, height, orientation);
     const paperAspectRatio = displayWidth / displayHeight;
 
-    const deviation = Math.abs(paperAspectRatio - templateAspectRatio) / templateAspectRatio;
-    if (deviation <= ASPECT_RATIO_TOLERANCE) return null;
+    if (!aspectRatiosMismatch(paperAspectRatio, templateAspectRatio)) return null;
 
     return { paperAspectRatio, templateAspectRatio };
   };
@@ -217,7 +213,7 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
           <div className="paper-meta">
             {isM02Family ? 'M02 paper' : getPaperTypeLabel(preset.paperType)}
             {mismatch && (
-              <span className="paper-mismatch" title="Doesn't match the current template's shape">
+              <span className="shape-mismatch" title="Doesn't match the current template's shape">
                 {' '}⚠
               </span>
             )}
