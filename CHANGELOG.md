@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0] - 2026-10-07
+
+### ✨ Features
+
+- theme toggle switches light/dark, defaulting to system at launch ([30883b7](https://github.com/mitchelloharawild/labelync/commit/30883b7))
+- Bluetooth-filtered printer picker with USB fallback ([fec5618](https://github.com/mitchelloharawild/labelync/commit/fec5618))
+- add live MQTT print endpoint ([92382dd](https://github.com/mitchelloharawild/labelync/commit/92382dd))
+
+### 🐛 Bug Fixes
+
+- linting cleanup ([4583ae2](https://github.com/mitchelloharawild/labelync/commit/4583ae2))
+
 ## [2.0.0] - 2026-09-20
 
 ### ✨ Features
