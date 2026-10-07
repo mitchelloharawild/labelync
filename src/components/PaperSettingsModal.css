@@ -10,30 +10,37 @@
 .orientation-button {
   flex: 1;
   padding: 10px 15px;
-  border: 2px solid #ddd;
+  border: 2px solid var(--color-border);
   border-radius: 4px;
-  background-color: white;
+  background-color: var(--color-field-bg);
+  color: var(--color-text);
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
 }
 
 .orientation-button:hover {
-  border-color: #007bff;
-  background-color: #f0f8ff;
+  border-color: var(--color-accent);
+  background-color: var(--color-surface-2);
 }
 
 .orientation-button.active {
-  border-color: #007bff;
-  background-color: #007bff;
-  color: white;
+  border-color: var(--color-accent);
+  background-color: var(--color-accent);
+  color: var(--color-accent-text);
+}
+
+.orientation-note {
+  display: block;
+  margin-top: 5px;
+  color: var(--color-text-muted);
 }
 
 .m02-media-type-note {
   display: block;
   margin-top: 5px;
   font-size: 0.85rem;
-  color: var(--color-text-muted, #666);
+  color: var(--color-text-muted);
   line-height: 1.4;
 }
 

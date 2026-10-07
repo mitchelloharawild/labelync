@@ -144,7 +144,7 @@ const PaperSettingsModal: React.FC<PaperSettingsModalProps> = ({
                 📃 Landscape
               </button>
             </div>
-            <small style={{ display: 'block', marginTop: '5px', color: '#666' }}>
+            <small className="orientation-note">
               {localConfig.orientation === 'landscape' && 
                 'Canvas will be rotated 90° clockwise during printing'}
             </small>

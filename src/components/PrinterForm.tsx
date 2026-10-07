@@ -30,7 +30,7 @@ const PrinterForm = ({
       <div className="printer-form">
         <div className="no-template-message">
           <p>📋 No template selected</p>
-          <p style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>
+          <p className="no-template-hint">
             Click "Template Manager" to upload or select a template
           </p>
         </div>

@@ -221,17 +221,17 @@ body {
 }
 
 .notification-error {
-  background-color: var(--color-danger);
+  background-color: #c62828;
   color: #fff;
 }
 
 .notification-success {
-  background-color: #4CAF50;
+  background-color: #2e7d32;
   color: #fff;
 }
 
 .notification-info {
-  background-color: #2196F3;
+  background-color: #1565c0;
   color: #fff;
 }
 

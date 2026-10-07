@@ -60,19 +60,24 @@
 }
 
 .template-name-display {
-  background: rgba(49, 212, 196, 0.1);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
   padding: 10px 12px;
   border-radius: 4px;
   margin-bottom: 16px;
   font-size: 14px;
   color: var(--color-text);
-  border: 1px solid rgba(49, 212, 196, 0.3);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
 .no-template-message {
   text-align: center;
   padding: 40px 20px;
   color: var(--color-text-muted);
+}
+
+.no-template-hint {
+  font-size: 14px;
+  margin-top: 10px;
 }
 
 .no-template-message p:first-child {
@@ -132,7 +137,7 @@
 .image-preview {
   margin-top: 8px;
   padding: 8px;
-  background: rgba(49, 212, 196, 0.05);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
   border-radius: 4px;
   display: inline-block;
 }

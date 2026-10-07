@@ -16,6 +16,8 @@
   margin-bottom: 5px;
 }
 
+.form-group input[type="text"],
+.form-group input[type="password"],
 .form-group input[type="number"],
 .form-group select {
   width: 100%;
@@ -25,7 +27,9 @@
   font-size: 14px;
   background-color: var(--color-field-bg);
   color: var(--color-text);
+}
 
+.form-group select {
   cursor: pointer;
 }
 
