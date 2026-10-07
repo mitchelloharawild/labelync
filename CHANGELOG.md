@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.1.1] - 2026-10-08
+
+### ✨ Features
+
+- flag templates whose shape doesn't match the paper ([2005a17](https://github.com/mitchelloharawild/labelync/commit/2005a17))
+- remember paper sizes in Paper Settings ([b0379e2](https://github.com/mitchelloharawild/labelync/commit/b0379e2))
+
+### 🐛 Bug Fixes
+
+- theme-aware colours for modals and readable contrast in both themes ([d078c5f](https://github.com/mitchelloharawild/labelync/commit/d078c5f))
+
 ## [2.1.0] - 2026-10-07
 
 ### ✨ Features

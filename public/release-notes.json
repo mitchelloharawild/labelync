@@ -1,9 +1,9 @@
 {
-  "version": "2.1.0",
-  "date": "2026-10-07",
+  "version": "2.1.1",
+  "date": "2026-10-08",
   "changes": [
-    "Added a live MQTT print endpoint",
-    "Printer picker now shows only compatible Bluetooth printers, with a USB fallback",
-    "Theme button now switches between light and dark, starting from your system setting"
+    "Paper Settings now remembers your paper sizes",
+    "Templates whose shape doesn't match the paper are now flagged",
+    "Fixed modal colours and text contrast in light and dark themes"
   ]
 }
