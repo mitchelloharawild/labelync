@@ -1,4 +1,4 @@
-import type { DeviceModel } from 'phomemo-protocol';
+import type { DeviceModel, ProtocolFamily } from 'phomemo-protocol';
 export type { ProtocolFamily } from 'phomemo-protocol';
 export { getProtocolFamily, M02_FIXED_PAPER_WIDTH_MM } from 'phomemo-protocol';
 
@@ -46,6 +46,18 @@ export interface Template {
   textFieldValues: Record<string, string>;
   fieldMetadata: FieldMetadata[];
   thumbnail?: string; // base64 encoded preview image
+  createdAt: number;
+  lastUsedAt: number;
+}
+
+// A saved paper size the user can pick from in Paper Settings. Orientation is
+// deliberately not part of a preset — it's toggled independently.
+export interface PaperPreset {
+  id: string;
+  family: ProtocolFamily;
+  paperType: number;
+  paperWidth: number; // in mm
+  paperHeight: number; // in mm
   createdAt: number;
   lastUsedAt: number;
 }
