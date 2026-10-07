@@ -2,8 +2,7 @@ import type { DeviceModel } from 'phomemo-protocol';
 export type { ProtocolFamily } from 'phomemo-protocol';
 export { getProtocolFamily, M02_FIXED_PAPER_WIDTH_MM } from 'phomemo-protocol';
 
-// Theme preference: 'system' follows the OS prefers-color-scheme setting
-export type Theme = 'system' | 'light' | 'dark';
+export type Theme = 'light' | 'dark';
 
 export interface FormData {
   qrText: string;

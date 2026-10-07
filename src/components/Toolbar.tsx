@@ -1,4 +1,4 @@
-import { IconGear, IconGrid, IconMonitor, IconMoon, IconPaper, IconSun, IconUpload } from './icons';
+import { IconGear, IconGrid, IconMoon, IconPaper, IconSun, IconUpload } from './icons';
 import type { Theme } from '../types';
 import './Toolbar.css';
 
@@ -8,22 +8,20 @@ interface ToolbarProps {
   onOpenTemplateModal: () => void;
   onOpenDataInput: () => void;
   onOpenSetup: () => void;
-  onCycleTheme: () => void;
+  onToggleTheme: () => void;
 }
 
 const THEME_ICON: Record<Theme, typeof IconSun> = {
-  system: IconMonitor,
   light: IconSun,
   dark: IconMoon,
 };
 
 const THEME_LABEL: Record<Theme, string> = {
-  system: 'System',
   light: 'Light',
   dark: 'Dark',
 };
 
-const Toolbar = ({ theme, onOpenPaperSettings, onOpenTemplateModal, onOpenDataInput, onOpenSetup, onCycleTheme }: ToolbarProps) => {
+const Toolbar = ({ theme, onOpenPaperSettings, onOpenTemplateModal, onOpenDataInput, onOpenSetup, onToggleTheme }: ToolbarProps) => {
   const ThemeIcon = THEME_ICON[theme];
 
   return (
@@ -44,7 +42,7 @@ const Toolbar = ({ theme, onOpenPaperSettings, onOpenTemplateModal, onOpenDataIn
       </div>
 
       <div className="rail-group rail-group-bottom">
-        <button className="rail-btn" onClick={onCycleTheme} title={`Theme: ${THEME_LABEL[theme]} — click to change`}>
+        <button className="rail-btn" onClick={onToggleTheme} title={`Theme: ${THEME_LABEL[theme]} — click to change`}>
           <ThemeIcon />
           <span>{THEME_LABEL[theme]}</span>
         </button>

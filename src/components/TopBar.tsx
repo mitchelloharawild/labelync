@@ -1,4 +1,4 @@
-import { IconGear, IconMonitor, IconMoon, IconSun } from './icons';
+import { IconGear, IconMoon, IconSun } from './icons';
 import type { Theme } from '../types';
 import './TopBar.css';
 
@@ -8,22 +8,20 @@ interface TopBarProps {
   theme: Theme;
   onDisconnect: () => void;
   onOpenSetup: () => void;
-  onCycleTheme: () => void;
+  onToggleTheme: () => void;
 }
 
 const THEME_ICON: Record<Theme, typeof IconSun> = {
-  system: IconMonitor,
   light: IconSun,
   dark: IconMoon,
 };
 
 const THEME_LABEL: Record<Theme, string> = {
-  system: 'System theme',
   light: 'Light theme',
   dark: 'Dark theme',
 };
 
-const TopBar = ({ isConnected, deviceLabel, theme, onDisconnect, onOpenSetup, onCycleTheme }: TopBarProps) => {
+const TopBar = ({ isConnected, deviceLabel, theme, onDisconnect, onOpenSetup, onToggleTheme }: TopBarProps) => {
   const ThemeIcon = THEME_ICON[theme];
 
   return (
@@ -40,7 +38,7 @@ const TopBar = ({ isConnected, deviceLabel, theme, onDisconnect, onOpenSetup, on
       <div className="top-bar-spacer" />
 
       <div className={`top-bar-icons${isConnected ? ' has-rail-duplicate' : ''}`}>
-        <button className="icon-btn" onClick={onCycleTheme} title={`${THEME_LABEL[theme]} — click to change`}>
+        <button className="icon-btn" onClick={onToggleTheme} title={`${THEME_LABEL[theme]} — click to change`}>
           <ThemeIcon />
         </button>
         {isConnected && (

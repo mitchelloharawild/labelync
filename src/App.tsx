@@ -14,7 +14,6 @@ import { useMqttPrinting, type MqttMessageResult } from './hooks/useMqttPrinting
 import { getDefaultConfig, loadPrinterConfig, savePrinterConfig } from './utils/printerStorage';
 import { getTemplate, getDefaultTemplate } from './utils/templateStorage';
 import { getFreshTextFieldValues } from './utils/svgTextUtils';
-import { loadTheme, saveTheme } from './utils/themeStorage';
 import { loadMqttConfig, saveMqttConfig } from './utils/mqttStorage';
 import { validateFieldKeys, hasValidationErrors, formatValidationError } from './utils/templateFieldValidation';
 import { printTemplateWithValues } from './utils/printFieldValues';
@@ -27,8 +26,8 @@ const DEFAULT_MQTT_CONFIG: MqttConfig = {
   requestTopic: 'labelync/print'
 };
 
-// Surface color to sync into the theme-color meta tag for each resolved theme
-const THEME_COLOR: Record<'light' | 'dark', string> = {
+// Surface color to sync into the theme-color meta tag for each theme
+const THEME_COLOR: Record<Theme, string> = {
   dark: '#2a3240',
   light: '#ffffff',
 };
@@ -57,7 +56,9 @@ function App() {
   const [copies, setCopies] = useState(1);
   const [isPrinting, setIsPrinting] = useState(false);
 
-  const [theme, setTheme] = useState<Theme>(loadTheme);
+  const [theme, setTheme] = useState<Theme>(() =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  );
   const [mqttConfig, setMqttConfig] = useState<MqttConfig>(() => loadMqttConfig() ?? DEFAULT_MQTT_CONFIG);
 
   const { isConnected, deviceId, reconnectablePort, connect, reconnect, disconnect, printImage } = usePrinter();
@@ -104,33 +105,15 @@ function App() {
   const handleMqttConnect = () => connectMqtt(mqttConfig);
 
   // Apply the selected theme to the document and keep the PWA theme-color
-  // meta tag in sync, including when "system" tracks OS preference changes.
+  // meta tag in sync. The initial theme follows the OS preference at launch.
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'system') {
-      root.removeAttribute('data-theme');
-    } else {
-      root.setAttribute('data-theme', theme);
-    }
-    saveTheme(theme);
-
-    const mql = window.matchMedia('(prefers-color-scheme: dark)');
-    const applyMetaThemeColor = () => {
-      const isDark = theme === 'dark' || (theme === 'system' && mql.matches);
-      const meta = document.querySelector('meta[name="theme-color"]');
-      meta?.setAttribute('content', isDark ? THEME_COLOR.dark : THEME_COLOR.light);
-    };
-
-    applyMetaThemeColor();
-
-    if (theme === 'system') {
-      mql.addEventListener('change', applyMetaThemeColor);
-      return () => mql.removeEventListener('change', applyMetaThemeColor);
-    }
+    document.documentElement.setAttribute('data-theme', theme);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    meta?.setAttribute('content', THEME_COLOR[theme]);
   }, [theme]);
 
-  const handleCycleTheme = () => {
-    setTheme(prev => (prev === 'system' ? 'light' : prev === 'light' ? 'dark' : 'system'));
+  const handleToggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   // Check if browser supports Web Serial API
@@ -394,7 +377,7 @@ function App() {
         theme={theme}
         onDisconnect={handleDisconnect}
         onOpenSetup={() => setIsSetupModalOpen(true)}
-        onCycleTheme={handleCycleTheme}
+        onToggleTheme={handleToggleTheme}
       />
 
       {!isConnected ? (
@@ -483,7 +466,7 @@ function App() {
             onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
             onOpenDataInput={() => setIsDataInputModalOpen(true)}
             onOpenSetup={() => setIsSetupModalOpen(true)}
-            onCycleTheme={handleCycleTheme}
+            onToggleTheme={handleToggleTheme}
           />
 
           <div className="content-split">
