@@ -134,6 +134,27 @@ body {
   cursor: not-allowed;
 }
 
+.connect-usb-link {
+  align-self: center;
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.connect-usb-link:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+.connect-usb-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .reconnect-button {
   margin-bottom: 10px;
   background-color: var(--color-surface-2);

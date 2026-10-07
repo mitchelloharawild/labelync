@@ -45,13 +45,16 @@ interface SerialOptions {
 interface SerialPortInfo {
   usbVendorId?: number;
   usbProductId?: number;
+  bluetoothServiceClassId?: number | string;
 }
 
 interface SerialPortRequestOptions {
   filters?: Array<{
     usbVendorId?: number;
     usbProductId?: number;
+    bluetoothServiceClassId?: number | string;
   }>;
+  allowedBluetoothServiceClassIds?: Array<number | string>;
 }
 
 interface Serial extends EventTarget {

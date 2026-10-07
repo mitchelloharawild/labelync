@@ -10,11 +10,40 @@ export interface KnownPort {
   deviceModel: PrinterConfig['deviceModel'];
 }
 
+export type PrinterTransport = 'bluetooth' | 'usb';
+
+// Bluetooth Serial Port Profile (SPP) service class UUID.
+const BLUETOOTH_SPP_SERVICE_CLASS_ID = '00001101-0000-1000-8000-00805f9b34fb';
+
+// Restricting the picker to Bluetooth SPP ports lets Chromium treat it as a
+// wireless-only request, so it prompts the user when Bluetooth is turned off
+// and refreshes the device list once the adapter is powered on. The USB path
+// keeps the unfiltered picker for wired serial connections.
+const requestSerialPort = async (transport: PrinterTransport): Promise<SerialPort> => {
+  if (transport === 'usb') {
+    return navigator.serial.requestPort();
+  }
+
+  try {
+    return await navigator.serial.requestPort({
+      filters: [{ bluetoothServiceClassId: BLUETOOTH_SPP_SERVICE_CLASS_ID }],
+      allowedBluetoothServiceClassIds: [BLUETOOTH_SPP_SERVICE_CLASS_ID],
+    });
+  } catch (e) {
+    // Older browsers don't recognise Bluetooth filters and reject the empty
+    // filter with a TypeError — fall back to the unfiltered picker.
+    if (e instanceof TypeError) {
+      return navigator.serial.requestPort();
+    }
+    throw e;
+  }
+};
+
 interface UsePrinterReturn {
   isConnected: boolean;
   deviceId: string | null;
   reconnectablePort: KnownPort | null;
-  connect: () => Promise<boolean>;
+  connect: (transport?: PrinterTransport) => Promise<boolean>;
   reconnect: () => Promise<boolean>;
   disconnect: () => Promise<void>;
   printImage: (canvas: HTMLCanvasElement, config: PrinterConfig) => Promise<void>;
@@ -80,7 +109,7 @@ export const usePrinter = (): UsePrinterReturn => {
     return true;
   }, []);
 
-  const connect = useCallback(async (): Promise<boolean> => {
+  const connect = useCallback(async (transport: PrinterTransport = 'bluetooth'): Promise<boolean> => {
     if (serialPort) {
       await serialPort.close();
       setSerialPort(null);
@@ -90,7 +119,7 @@ export const usePrinter = (): UsePrinterReturn => {
     }
 
     try {
-      const port = await navigator.serial.requestPort();
+      const port = await requestSerialPort(transport);
       return await openPort(port);
     } catch (e) {
       console.error('Failed to connect:', e);

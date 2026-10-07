@@ -9,7 +9,7 @@ import { PWAUpdateNotification } from './components/PWAUpdateNotification';
 import TopBar from './components/TopBar';
 import Toolbar from './components/Toolbar';
 import ActionBar from './components/ActionBar';
-import { usePrinter } from './hooks/usePrinter';
+import { usePrinter, type PrinterTransport } from './hooks/usePrinter';
 import { useMqttPrinting, type MqttMessageResult } from './hooks/useMqttPrinting';
 import { getDefaultConfig, loadPrinterConfig, savePrinterConfig } from './utils/printerStorage';
 import { getTemplate, getDefaultTemplate } from './utils/templateStorage';
@@ -172,13 +172,19 @@ function App() {
     }
   }, [deviceId]);
 
-  const handleConnect = async () => {
+  const handleConnect = async (transport: PrinterTransport = 'bluetooth') => {
     setIsConnecting(true);
     try {
-      const success = await connect();
+      const success = await connect(transport);
       if (!success) {
-        setNotification({ message: 'Failed to connect to printer. Please try again.', type: 'error' });
-        setTimeout(() => setNotification(null), 5000);
+        // The picker was closed without choosing a port — most often because
+        // the printer wasn't listed, so point at the usual causes.
+        notify(
+          transport === 'bluetooth'
+            ? 'No printer selected. Check that Bluetooth is on and your printer is switched on and paired with this device.'
+            : 'No printer selected. Check that your printer is plugged in and switched on.',
+          'info'
+        );
       }
     } catch (error) {
       setNotification({ message: 'Connection failed: ' + (error instanceof Error ? error.message : 'Unknown error'), type: 'error' });
@@ -414,10 +420,18 @@ function App() {
 
             <button
               className="connect-button"
-              onClick={handleConnect}
+              onClick={() => handleConnect('bluetooth')}
               disabled={!isSerialSupported || isConnecting || isReconnecting}
             >
               {isConnecting ? 'Connecting...' : 'Connect printer'}
+            </button>
+
+            <button
+              className="connect-usb-link"
+              onClick={() => handleConnect('usb')}
+              disabled={!isSerialSupported || isConnecting || isReconnecting}
+            >
+              Connect via USB instead
             </button>
 
             <div className="quick-start-guide">
