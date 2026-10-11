@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0] - 2026-10-11
+
+### ✨ Features
+
+- add explicit disconnect buttons for the printer ([ea9a959](https://github.com/mitchelloharawild/labelync/commit/ea9a959))
+- allow typing the print quantity ([e00bebc](https://github.com/mitchelloharawild/labelync/commit/e00bebc))
+
 ## [2.1.2] - 2026-10-11
 
 ### 🐛 Bug Fixes

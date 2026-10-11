@@ -1,7 +1,8 @@
 {
-  "version": "2.1.2",
+  "version": "2.2.0",
   "date": "2026-10-11",
   "changes": [
-    "Fixed the Bluetooth printer list staying empty on Android after turning Bluetooth on"
+    "Type the print quantity directly instead of only using the +/- buttons",
+    "Disconnect the printer with a dedicated button in the top bar or Printer Setup"
   ]
 }
