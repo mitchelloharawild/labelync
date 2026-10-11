@@ -507,6 +507,7 @@ function App() {
         onClose={() => setIsSetupModalOpen(false)}
         config={printerConfig}
         onSave={handleSaveConfig}
+        onDisconnect={handleDisconnect}
       />
 
       <PaperSettingsModal

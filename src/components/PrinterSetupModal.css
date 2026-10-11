@@ -8,3 +8,19 @@
   color: var(--color-text-muted);
   line-height: 1.4;
 }
+
+/* Pushed to the left of the footer, away from Save */
+.footer-start {
+  margin-right: auto;
+}
+
+.button-danger-outline {
+  background: none;
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+}
+
+.button-danger-outline:hover {
+  background-color: var(--color-danger);
+  color: #ffffff;
+}

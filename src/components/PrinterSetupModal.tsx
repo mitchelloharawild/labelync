@@ -9,13 +9,15 @@ interface PrinterSetupModalProps {
   onClose: () => void;
   config: PrinterConfig;
   onSave: (config: PrinterConfig) => void;
+  onDisconnect: () => void;
 }
 
 const PrinterSetupModal: React.FC<PrinterSetupModalProps> = ({
   isOpen,
   onClose,
   config,
-  onSave
+  onSave,
+  onDisconnect
 }) => {
   const [localConfig, setLocalConfig] = React.useState<PrinterConfig>(config);
 
@@ -47,10 +49,18 @@ const PrinterSetupModal: React.FC<PrinterSetupModalProps> = ({
     onClose();
   };
 
+  const handleDisconnect = () => {
+    onClose();
+    onDisconnect();
+  };
+
   const protocolFamily = getProtocolFamily(localConfig.deviceModel);
 
   const footer = (
     <>
+      <button className="button button-danger-outline footer-start" onClick={handleDisconnect}>
+        Disconnect Printer
+      </button>
       <button className="button button-secondary" onClick={onClose}>
         Cancel
       </button>

@@ -91,3 +91,10 @@ export const IconMinus = ({ size = 14 }: IconProps) => (
     <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
+
+export const IconPower = ({ size = 16 }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" {...base}>
+    <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+    <line x1="12" y1="2" x2="12" y2="12" />
+  </svg>
+);

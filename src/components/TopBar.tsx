@@ -1,4 +1,4 @@
-import { IconGear, IconMoon, IconSun } from './icons';
+import { IconGear, IconMoon, IconPower, IconSun } from './icons';
 import type { Theme } from '../types';
 import './TopBar.css';
 
@@ -29,10 +29,16 @@ const TopBar = ({ isConnected, deviceLabel, theme, onDisconnect, onOpenSetup, on
       <span className="app-title">Labelync</span>
 
       {isConnected && (
-        <button className="device-pill" onClick={onDisconnect} title="Disconnect printer">
-          <span className="status-dot" />
-          {deviceLabel}
-        </button>
+        <div className="device-status">
+          <span className="device-pill" title="Printer connected">
+            <span className="status-dot" />
+            {deviceLabel}
+          </span>
+          <button className="disconnect-btn" onClick={onDisconnect} title="Disconnect printer" aria-label="Disconnect printer">
+            <IconPower size={14} />
+            <span className="disconnect-label">Disconnect</span>
+          </button>
+        </div>
       )}
 
       <div className="top-bar-spacer" />

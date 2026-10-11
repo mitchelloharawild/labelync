@@ -15,26 +15,58 @@
   white-space: nowrap;
 }
 
+.device-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .device-pill {
   display: flex;
   align-items: center;
   gap: 6px;
   background: var(--color-field-bg);
-  border: none;
   border-radius: 999px;
   padding: 6px 12px;
   color: var(--color-text-muted);
   font-size: 12px;
-  cursor: pointer;
-  max-width: 100%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.device-pill:hover {
-  background: var(--color-surface-2);
-  color: var(--color-text);
+.disconnect-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 5px 10px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.disconnect-btn:hover {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+/* Narrow phones: icon-only disconnect so the device name keeps its room */
+@media (max-width: 420px) {
+  .disconnect-label {
+    display: none;
+  }
+
+  .disconnect-btn {
+    padding: 5px 7px;
+  }
 }
 
 .status-dot {
