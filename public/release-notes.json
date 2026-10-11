@@ -1,9 +1,7 @@
 {
-  "version": "2.1.1",
-  "date": "2026-10-08",
+  "version": "2.1.2",
+  "date": "2026-10-11",
   "changes": [
-    "Paper Settings now remembers your paper sizes",
-    "Templates whose shape doesn't match the paper are now flagged",
-    "Fixed modal colours and text contrast in light and dark themes"
+    "Fixed the Bluetooth printer list staying empty on Android after turning Bluetooth on"
   ]
 }

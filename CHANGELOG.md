@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.2] - 2026-10-11
+
+### 🐛 Bug Fixes
+
+- avoid stale empty Bluetooth printer list on Android ([87544d6](https://github.com/mitchelloharawild/labelync/commit/87544d6))
+
 ## [2.1.1] - 2026-10-08
 
 ### ✨ Features
