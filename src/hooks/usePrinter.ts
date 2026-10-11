@@ -12,6 +12,8 @@ export interface KnownPort {
 
 export type PrinterTransport = 'bluetooth' | 'usb';
 
+export const isAndroid = /Android/i.test(navigator.userAgent);
+
 // Bluetooth Serial Port Profile (SPP) service class UUID.
 const BLUETOOTH_SPP_SERVICE_CLASS_ID = '00001101-0000-1000-8000-00805f9b34fb';
 
@@ -58,8 +60,14 @@ export const usePrinter = (): UsePrinterReturn => {
   // On mount, check for already-authorized ports (granted in a previous session)
   // that match a previously-saved printer config, so we can offer a one-click
   // reconnect instead of re-prompting the OS device picker.
+  //
+  // Skipped on Android: Chrome there reads the paired Bluetooth devices once,
+  // on first serial access, and never re-reads them. If getPorts() runs while
+  // Bluetooth is off, the picker stays empty until Chrome is restarted. Leaving
+  // the first access to the Bluetooth-filtered picker avoids this, as it waits
+  // for the adapter to be powered on before listing ports.
   useEffect(() => {
-    if (!('serial' in navigator)) return;
+    if (!('serial' in navigator) || isAndroid) return;
 
     let cancelled = false;
 

@@ -9,7 +9,7 @@ import { PWAUpdateNotification } from './components/PWAUpdateNotification';
 import TopBar from './components/TopBar';
 import Toolbar from './components/Toolbar';
 import ActionBar from './components/ActionBar';
-import { usePrinter, type PrinterTransport } from './hooks/usePrinter';
+import { usePrinter, isAndroid, type PrinterTransport } from './hooks/usePrinter';
 import { useMqttPrinting, type MqttMessageResult } from './hooks/useMqttPrinting';
 import { getDefaultConfig, loadPrinterConfig, savePrinterConfig } from './utils/printerStorage';
 import { getTemplate, getDefaultTemplate } from './utils/templateStorage';
@@ -164,7 +164,8 @@ function App() {
         // the printer wasn't listed, so point at the usual causes.
         notify(
           transport === 'bluetooth'
-            ? 'No printer selected. Check that Bluetooth is on and your printer is switched on and paired with this device.'
+            ? 'No printer selected. Check that Bluetooth is on and your printer is switched on and paired with this device.' +
+              (isAndroid ? ' If Bluetooth was off when you opened the app, force-stop Chrome (Settings › Apps › Chrome) and try again.' : '')
             : 'No printer selected. Check that your printer is plugged in and switched on.',
           'info'
         );
